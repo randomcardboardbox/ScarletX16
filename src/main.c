@@ -16,7 +16,7 @@
 #define DEVICE 8
 #define SA 2
 #define MODE 0
-char filename[] = "breakfast.bmx";
+char filename[] = "dripzero.bmx";
 void load_bmx_file(){
     u16 vram_addr = SPRITE_VRAM_DATA_ADDR;
     u8 ram_bank = 2;
@@ -109,7 +109,7 @@ int main(){
         tool_handler();
         tool_ui_handler();
 
-        // update_ui_elements_from_ptr();
+        update_ui_elements_from_ptr();
     }
 }
 

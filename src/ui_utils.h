@@ -11,7 +11,8 @@
 #define UI_HLINE 3
 #define UI_VLINE 4
 #define UI_BUTTON 5
-#define UI_SLIDER 6
+#define UI_TOGGLE_BUT 6
+#define UI_SLIDER 7
 
 extern u8 create_ui_element(u8 parent_id, u8 type, u8 pos_x, u8 pos_y, u8 size_x, u8 size_y, u16 render_func, u16 mouse_func);
 extern u8 delete_ui_element(u8 id);

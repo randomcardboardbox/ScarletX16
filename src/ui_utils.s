@@ -728,29 +728,35 @@ L0013:	ldy     #$07
 
 	jsr     decsp1
 	lda     #$00
-L0010:	sta     (sp)
+L001C:	sta     (sp)
 	cmp     #$1E
-	bcs     L0003
+	jcs     L0003
 	lda     (sp)
 	tay
 	lda     __ui_type,y
-	bne     L0004
+	jeq     L0004
 	lda     (sp)
 	tay
 	lda     __ui_var_ptr_low,y
 	sta     ptr1
 	lda     (sp)
 	tay
-	lda     __ui_var_ptr_high,y
+	ldx     __ui_var_ptr_high,y
 	clc
-	adc     ptr1
-	tax
-	lda     #$00
-	jsr     pushax
+	lda     ptr1
+	bcc     L0019
+	inx
+L0019:	jsr     pushax
 	lda     (sp)
 	ldy     #$01
 	ora     (sp),y
-	beq     L000C
+	jeq     L000A
+	iny
+	lda     (sp),y
+	tay
+	lda     __ui_type,y
+	cmp     #$06
+	bne     L000C
 	jsr     ldax0sp
 	sta     ptr1
 	stx     ptr1+1
@@ -761,29 +767,62 @@ L0010:	sta     (sp)
 	tay
 	lda     __ui_var_old_val,y
 	cmp     ptr1
-	beq     L000C
-	lda     #<(__ui_var_old_val)
+	beq     L0015
+	jsr     ldax0sp
+	sta     ptr1
+	stx     ptr1+1
+	lda     (ptr1)
+	sta     ptr1
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     __ui_var_val,y
+	cmp     ptr1
+	beq     L0010
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     #$F0
+	bra     L001A
+L0010:	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     #$E0
+L001A:	sta     __ui_palette,y
+	bra     L001E
+L000C:	jsr     ldax0sp
+	sta     ptr1
+	stx     ptr1+1
+	lda     (ptr1)
+	sta     ptr1
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     __ui_var_old_val,y
+	cmp     ptr1
+	beq     L0015
+L001E:	ldy     #$02
+	lda     (sp),y
+	jsr     __draw_ui_element
+L0015:	lda     #<(__ui_var_old_val)
 	ldx     #>(__ui_var_old_val)
 	ldy     #$02
 	clc
 	adc     (sp),y
-	bcc     L000E
+	bcc     L0018
 	inx
-L000E:	sta     sreg
+L0018:	sta     sreg
 	stx     sreg+1
 	jsr     ldax0sp
 	sta     ptr1
 	stx     ptr1+1
 	lda     (ptr1)
 	sta     (sreg)
-	ldy     #$02
-	lda     (sp),y
-	jsr     __draw_ui_element
-L000C:	jsr     incsp2
+L000A:	jsr     incsp2
 L0004:	clc
 	lda     #$01
 	adc     (sp)
-	bra     L0010
+	jmp     L001C
 L0003:	jmp     incsp1
 
 .endproc

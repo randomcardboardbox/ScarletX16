@@ -1884,39 +1884,55 @@ L0007:	jsr     pushax
 
 .segment	"CODE"
 
+	lda     _keycode
+	beq     L0002
 	lda     __current_tool
 	cmp     #$03
-	bne     L000C
+	bne     L0011
 	lda     _keycode
 	cmp     #$1B
-	bne     L000A
+	bne     L0015
 	stz     _point_selected
-	rts
-L000C:	lda     __current_tool
-	bne     L000A
+	bra     L0015
+L0011:	lda     __current_tool
+	bne     L0015
 	lda     _keycode
 	cmp     #$3D
-	bne     L000D
+	bne     L0012
 	lda     #$02
 	clc
 	adc     _brush_size
 	sta     _brush_size
-	cmp     #$11
-	bcc     L000A
-	lda     #$10
-	bra     L000B
-L000D:	lda     _keycode
+	cmp     #$21
+	bcc     L0015
+	lda     #$20
+	sta     _brush_size
+	bra     L0015
+L0012:	lda     _keycode
 	cmp     #$2D
-	bne     L000A
+	bne     L0013
 	lda     _brush_size
 	sec
 	sbc     #$02
 	sta     _brush_size
 	cmp     #$02
-	bcs     L000A
+	bcs     L0015
 	lda     #$02
-L000B:	sta     _brush_size
-L000A:	rts
+	sta     _brush_size
+	bra     L0015
+L0013:	lda     _keycode
+	cmp     #$51
+	bne     L0014
+	lda     #$00
+	bra     L0010
+L0014:	lda     _keycode
+	cmp     #$57
+	bne     L0015
+	lda     #$01
+L0010:	sta     _brush_type
+L0015:	lda     _keycode
+	sta     $0060
+L0002:	rts
 
 .endproc
 

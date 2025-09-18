@@ -362,18 +362,28 @@ void eye_dropper_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
 }
 
 void handle_key_command(){
-    if(_current_tool == LINE_TOOL) {
-        if(keycode == 27) point_selected = 0;
-    }
-    else if(_current_tool == DRAW_TOOL) {
-        if(keycode == 61){ 
-            brush_size += 2;
-            if(brush_size > 16) brush_size = 16;
+    if (keycode != 0) {
+        if(_current_tool == LINE_TOOL) {
+            if(keycode == 27) point_selected = 0;
         }
-        else if(keycode == 45) {
-            brush_size -= 2;
-            if(brush_size < 2) brush_size = 2;
+        else if(_current_tool == DRAW_TOOL) {
+            if(keycode == 61){ 
+                brush_size += 2;
+                if(brush_size > 32) brush_size = 32;
+            }
+            else if(keycode == 45) {
+                brush_size -= 2;
+                if(brush_size < 2) brush_size = 2;
+            }
+            else if(keycode == 81){
+                brush_type = 0;
+            }
+            else if(keycode == 87){
+                brush_type = 1;
+            }
         }
+
+        (*(u8 *)0x0060) = keycode;
     }
 }
 

@@ -75,7 +75,7 @@ initialize_tool_ui(){
     init_text_element(tool_text_ui_id, tool_text);
 
     for(i=0; i<8; i++){
-        icon = create_ui_element(tool_container_id, UI_BUTTON, x, y, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
+        icon = create_ui_element(tool_container_id, UI_TOGGLE_BUT, x, y, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
         init_icon_element(icon, 144+gfx_addr_offset, &_current_tool, i);
         x += 2;
 

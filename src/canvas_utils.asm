@@ -110,6 +110,8 @@ __get_pixel:
     lda VERA_data0
     rts
 
+;void _draw_row_to_sprite(u8 pal_col, u8 width, u8 x, u8 y);
+; TODO: clamp to the edges of the canvas at the right and left
 __draw_row_to_sprite:
     stz PIX_ADDR+1
     sta PIX_ADDR
@@ -547,6 +549,11 @@ __render_palette_sprites:
 ROW_DISPLAY_ADDR = ZP_PTR_1
 ROW_SPRITE_ADDR = ZP_PTR_2
 __draw_row_to_screen:
+    cmp _bmx_width
+    bmi @skip_early_exit
+    rts
+    @skip_early_exit:
+
     stz ROW_SPRITE_ADDR+1
     sta ROW_SPRITE_ADDR
     

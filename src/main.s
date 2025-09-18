@@ -24,6 +24,7 @@
 	.import		__get_mouse_input
 	.import		__draw_ui_element
 	.import		__update_ui_element_position
+	.import		_update_ui_elements_from_ptr
 	.import		__clear_ui_layer
 	.import		_set_layer_config
 	.import		_initialize_paint_ui
@@ -53,7 +54,7 @@
 .segment	"DATA"
 
 _filename:
-	.byte	$42,$52,$45,$41,$4B,$46,$41,$53,$54,$2E,$42,$4D,$58,$00
+	.byte	$44,$52,$49,$50,$5A,$45,$52,$4F,$2E,$42,$4D,$58,$00
 _timer:
 	.byte	$00
 
@@ -304,6 +305,7 @@ L0002:	jsr     __wait_for_nmi
 	jsr     _handle_keyboard_input
 	jsr     _tool_handler
 	jsr     _tool_ui_handler
+	jsr     _update_ui_elements_from_ptr
 	bra     L0002
 
 .endproc

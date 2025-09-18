@@ -448,9 +448,9 @@ L0009:	sta     (sp),y
 	jcs     L000C
 	lda     _tool_container_id
 	jsr     pusha
-	lda     #$05
+	lda     #$06
 	jsr     pusha
-	ldy     #$06
+	tay
 	lda     (sp),y
 	jsr     pusha
 	ldy     #$06

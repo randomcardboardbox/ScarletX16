@@ -43,14 +43,14 @@ _size_text:
 	.byte	$53,$49,$5A,$45,$00
 _text_id1:
 	.byte	$00
+_old_tool:
+	.byte	$03
 
 .segment	"BSS"
 
 _slider:
 	.res	1,$00
 _context_parent_id:
-	.res	1,$00
-_old_tool:
 	.res	1,$00
 
 ; ---------------------------------------------------------------
@@ -156,7 +156,7 @@ L0007:	lda     __current_tool
 	jsr     _init_text_element
 	lda     _context_parent_id
 	jsr     pusha
-	lda     #$05
+	lda     #$06
 	jsr     pusha
 	lda     #$18
 	jsr     pusha
@@ -183,7 +183,7 @@ L0007:	lda     __current_tool
 	jsr     _init_icon_element
 	lda     _context_parent_id
 	jsr     pusha
-	lda     #$05
+	lda     #$06
 	jsr     pusha
 	lda     #$16
 	jsr     pusha
@@ -210,7 +210,7 @@ L0007:	lda     __current_tool
 	jsr     _init_icon_element
 	lda     _context_parent_id
 	jsr     pusha
-	lda     #$06
+	lda     #$07
 	jsr     pusha
 	lda     #$0B
 	jsr     pusha

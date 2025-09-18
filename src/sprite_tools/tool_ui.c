@@ -24,9 +24,9 @@ void brush_ui_handler(){
     init_text_element(text_id1, size_text);
 
     #define ROUND_BRUSH_ADDR 180
-    icon_id = create_ui_element(context_parent_id, UI_BUTTON, 24, 3, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
+    icon_id = create_ui_element(context_parent_id, UI_TOGGLE_BUT, 24, 3, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
     init_icon_element(icon_id, ROUND_BRUSH_ADDR, &brush_type, 1);
-    icon_id = create_ui_element(context_parent_id, UI_BUTTON, 22, 3, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
+    icon_id = create_ui_element(context_parent_id, UI_TOGGLE_BUT, 22, 3, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
     init_icon_element(icon_id, ROUND_BRUSH_ADDR-4, &brush_type, 0);
 
 
@@ -34,7 +34,7 @@ void brush_ui_handler(){
     init_slider_element(slider, &brush_size);
 }
 
-u8 old_tool;
+u8 old_tool = LINE_TOOL;
 void tool_ui_handler(){
     if(old_tool != _current_tool){
         if(context_parent_id != 0){

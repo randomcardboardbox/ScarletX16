@@ -75,16 +75,26 @@ u8 delete_ui_element(u8 ui_id){
     }
 }
 
+//TODO: handling text changes and button changes
 void update_ui_elements_from_ptr(){
     u8 i;
     for(i=0; i<MAX_UI_ELEMENTS; i++){
-        if(_ui_type[i] == 0){
-            u8 *ptr = (u16)_ui_var_ptr_low[i] + ((u16)_ui_var_ptr_high[i])<<8;
+        if(_ui_type[i] != 0){
+            u8 *ptr = (u16)_ui_var_ptr_low[i] + (((u16)_ui_var_ptr_high[i])<<8);
             if(ptr != NULL){
-                if(*ptr != _ui_var_old_val[i]){
-                    _ui_var_old_val[i] = *ptr;
+                if(_ui_type[i] == UI_TOGGLE_BUT){
+                    if(*ptr != _ui_var_old_val[i]){
+                        if(*ptr != _ui_var_val[i]) _ui_palette[i] = 0xF0; 
+                        else _ui_palette[i] = 0xE0; 
+                        _draw_ui_element(i);
+                    }
+                }
+                else if(*ptr != _ui_var_old_val[i]){
+                    
                     _draw_ui_element(i);
                 }
+
+                _ui_var_old_val[i] = *ptr;
             }
         }
     }
