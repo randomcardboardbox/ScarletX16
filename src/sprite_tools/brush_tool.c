@@ -16,24 +16,36 @@ u8 row_widths[] = {1, 1, 2, 2, 3, 3, 2, 3, 4, 4, 2, 3, 4, 5, 5, 3, 4, 5, 6, 6, 6
 u8 brush_ptrs[17] = {0, 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120};
 
 void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u8 redraw_screen){
-    u8 radius = brush_size>>1;
-    u8 width_index = brush_ptrs[radius];
-    u8 width;
-    u8 i;
-    u8 j;
-    for(i=0; i<radius; i++){
-        width = row_widths[width_index];
-        width_index += 1;
+    if(brush_type == 0){ //round brush
+        u8 radius = brush_size>>1;
+        u8 width_index = brush_ptrs[radius];
+        u8 width;
+        u8 i;
+        u8 j;
+        for(i=0; i<radius; i++){
+            width = row_widths[width_index];
+            width_index += 1;
 
-        // add_history_node_row((width<<1), x-width, y+i-radius, colour);
-        // add_history_node_row((width<<1), x-width, y+radius-i-1, colour);
+            // add_history_node_row((width<<1), x-width, y+i-radius, colour);
+            // add_history_node_row((width<<1), x-width, y+radius-i-1, colour);
 
-        _draw_row_to_sprite(colour, (width<<1), x-width, y+i-radius);
-        _draw_row_to_sprite(colour, (width<<1), x-width, y+radius-i-1);
+            _draw_row_to_sprite(colour, (width<<1), x-width, y+i-radius);
+            _draw_row_to_sprite(colour, (width<<1), x-width, y+radius-i-1);
+        }
+    }
+    else{ //square brush
+        u8 i;
+        u8 radius = brush_size>>1;
+        for(i=0; i<brush_size; i++){
+            _draw_row_to_sprite(colour, brush_size, x-radius, y+i-radius);
+        }
+    }
 
-        if(redraw_screen){
+    if(redraw_screen){
+        u8 i;
+        u8 radius = brush_size>>1;
+        for(i=0; i<brush_size; i++){
             _draw_row_to_screen(y+i-radius);
-            _draw_row_to_screen(y+radius-i-1);
         }
     }
 }

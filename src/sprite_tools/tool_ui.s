@@ -15,19 +15,41 @@
 	.import		__current_tool
 	.import		_context_container_id
 	.import		_create_ui_element
+	.import		_delete_ui_element
+	.import		_init_text_element
+	.import		_init_icon_element
+	.import		_init_slider_element
 	.import		__draw_ui_element
 	.import		__update_ui_element_position
-	.import		__draw_ui_box
+	.import		__empty_draw_func
+	.import		__draw_ui_text
+	.import		__draw_ui_icon
+	.import		__draw_ui_slider
+	.import		__press_toggle_button_mouse_func
+	.import		_brush_size
+	.import		_brush_type
+	.export		_slider
+	.export		_context_parent_id
 	.export		_shape_text
+	.export		_size_text
+	.export		_text_id1
 	.export		_old_tool
 
 .segment	"DATA"
 
 _shape_text:
 	.byte	$53,$48,$41,$50,$45,$00
+_size_text:
+	.byte	$53,$49,$5A,$45,$00
+_text_id1:
+	.byte	$00
 
 .segment	"BSS"
 
+_slider:
+	.res	1,$00
+_context_parent_id:
+	.res	1,$00
 _old_tool:
 	.res	1,$00
 
@@ -43,11 +65,18 @@ _old_tool:
 
 	lda     _old_tool
 	cmp     __current_tool
-	beq     L0004
-	lda     __current_tool
-	bne     L0004
+	beq     L0007
+	lda     _context_parent_id
+	beq     L0005
+	jsr     _delete_ui_element
+L0005:	lda     __current_tool
+	bne     L0006
 	jsr     _brush_ui_handler
-L0004:	lda     __current_tool
+L0006:	lda     _context_container_id
+	jsr     __update_ui_element_position
+	lda     _context_container_id
+	jsr     __draw_ui_element
+L0007:	lda     __current_tool
 	sta     _old_tool
 	rts
 
@@ -66,27 +95,142 @@ L0004:	lda     __current_tool
 	jsr     decsp2
 	lda     _context_container_id
 	jsr     pusha
-	lda     #$05
-	jsr     pusha
-	lda     #$18
-	jsr     pusha
-	lda     #$04
-	jsr     pusha
 	lda     #$02
 	jsr     pusha
+	lda     #$00
 	jsr     pusha
-	lda     #<(__draw_ui_box)
-	ldx     #>(__draw_ui_box)
+	jsr     pusha
+	lda     #$1C
+	jsr     pusha
+	lda     #$07
+	jsr     pusha
+	lda     #<(__empty_draw_func)
+	ldx     #>(__empty_draw_func)
 	jsr     pushax
 	ldx     #$00
 	txa
 	jsr     _create_ui_element
+	sta     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #$15
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	ina
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_text)
+	ldx     #>(__draw_ui_text)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(_shape_text)
+	ldx     #>(_shape_text)
+	jsr     _init_text_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #$0B
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	ina
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_text)
+	ldx     #>(__draw_ui_text)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(_size_text)
+	ldx     #>(_size_text)
+	jsr     _init_text_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$05
+	jsr     pusha
+	lda     #$18
+	jsr     pusha
+	lda     #$03
+	jsr     pusha
+	dea
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_icon)
+	ldx     #>(__draw_ui_icon)
+	jsr     pushax
+	lda     #<(__press_toggle_button_mouse_func)
+	ldx     #>(__press_toggle_button_mouse_func)
+	jsr     _create_ui_element
 	ldy     #$01
 	sta     (sp),y
-	lda     _context_container_id
-	jsr     __update_ui_element_position
-	lda     _context_container_id
-	jsr     __draw_ui_element
+	jsr     pusha
+	lda     #$B4
+	jsr     pusha
+	lda     #<(_brush_type)
+	ldx     #>(_brush_type)
+	jsr     pushax
+	lda     #$01
+	jsr     _init_icon_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$05
+	jsr     pusha
+	lda     #$16
+	jsr     pusha
+	lda     #$03
+	jsr     pusha
+	dea
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_icon)
+	ldx     #>(__draw_ui_icon)
+	jsr     pushax
+	lda     #<(__press_toggle_button_mouse_func)
+	ldx     #>(__press_toggle_button_mouse_func)
+	jsr     _create_ui_element
+	ldy     #$01
+	sta     (sp),y
+	jsr     pusha
+	lda     #$B0
+	jsr     pusha
+	lda     #<(_brush_type)
+	ldx     #>(_brush_type)
+	jsr     pushax
+	lda     #$00
+	jsr     _init_icon_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$06
+	jsr     pusha
+	lda     #$0B
+	jsr     pusha
+	lda     #$03
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #<(__draw_ui_slider)
+	ldx     #>(__draw_ui_slider)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _slider
+	jsr     pusha
+	lda     #<(_brush_size)
+	ldx     #>(_brush_size)
+	jsr     _init_slider_element
 	jmp     incsp2
 
 .endproc

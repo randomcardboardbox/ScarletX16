@@ -10,12 +10,13 @@
 #include "sprite_tools/draw_tools_utils.h"
 #include "sprite_tools/brush_tool.h"
 #include "sprite_tools/tool_ui.h"
+#include "sprite_tools/tool_globals.h"
 
 #define LFN 15
 #define DEVICE 8
 #define SA 2
 #define MODE 0
-char filename[] = "arthur.bmx";
+char filename[] = "breakfast.bmx";
 void load_bmx_file(){
     u16 vram_addr = SPRITE_VRAM_DATA_ADDR;
     u8 ram_bank = 2;
@@ -63,6 +64,7 @@ void save_bmx_file(){
 
 void handle_keyboard_input(){
     if (keycode) {
+
         if(keycode == 26) undo_last_history_node();
         else if(keycode == 25) restore_last_history_node();
 
@@ -73,6 +75,8 @@ void handle_keyboard_input(){
         // printf("PETSCII Code %u\n", keycode);
     }
 }
+
+u8 timer = 0;
 
 int main(){
     u8 ui_index = 0;
@@ -87,13 +91,15 @@ int main(){
     init_canvas_vera_sprites();
     _render_palette_sprites();
 
+    _clear_ui_layer(0x10000);
+    _update_ui_element_position(0);
     _draw_ui_element(0);
+    
     _draw_canvas_to_screen();
     set_pal_icon_sprites();
 
-    brush_ui_handler();
-
     while(1){
+
         _wait_for_nmi();
 
         _get_mouse_input();
@@ -102,21 +108,22 @@ int main(){
         handle_keyboard_input();
         tool_handler();
         tool_ui_handler();
-        // _draw_ui_element(0);
+
+        // update_ui_elements_from_ptr();
     }
 }
 
 // #include <stdio.h>
 
-// unsigned char keycode;
+// unsigned char keycode1;
 
 // void main() {
 //     while(1) {
 //         asm("jsr $FFE4");
-//         asm("sta %v", keycode);
+//         asm("sta %v", keycode1);
 
-//         if (keycode) {
-//             printf("PETSCII Code %u\n", keycode);
+//         if (keycode1) {
+//             printf("PETSCII Code %u\n", keycode1);
 //         }
 //     }
 // }

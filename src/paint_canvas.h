@@ -19,8 +19,8 @@
 #define HIS_STACK_BANK (*(u8 *)0x58)
 
 #define PAL_SPR_ROWS (*(u8 *)0x59)
-#define PAL_SPR_WIDTH (*(u8 *)0x60)
-#define PAL_SPR_HEIGHT (*(u8 *)0x61)
+#define PAL_SPR_WIDTH (*(u8 *)0x5A)
+#define PAL_SPR_HEIGHT (*(u8 *)0x5B)
 
 extern u8 _primary_colour;
 extern u8 _secondary_colour;

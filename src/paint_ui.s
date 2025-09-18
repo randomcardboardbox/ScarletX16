@@ -38,8 +38,6 @@
 	.import		__ui_first_child
 	.import		__ui_next_sib
 	.import		__draw_ui_element
-	.import		__update_ui_element_position
-	.import		__clear_ui_layer
 	.import		__empty_draw_func
 	.import		__draw_ui_text
 	.import		__draw_ui_box
@@ -182,7 +180,7 @@ _context_container_id:
 	jsr     pusha
 	lda     #$01
 	jsr     pusha
-	ldx     #$30
+	ldx     #$60
 	dea
 	jsr     __load_file_into_vram
 	lda     #<(S0005)
@@ -302,12 +300,7 @@ _context_container_id:
 	jsr     pusha
 	lda     #$00
 	jsr     __set_sprite_attribute
-	jsr     _initialize_tool_ui
-	lda     #$00
-	jsr     __update_ui_element_position
-	lda     _tilemap0_addr
-	ldx     _tilemap0_addr+1
-	jmp     __clear_ui_layer
+	jmp     _initialize_tool_ui
 
 .endproc
 

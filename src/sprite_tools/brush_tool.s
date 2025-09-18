@@ -190,7 +190,10 @@ _brush_ptrs:
 .segment	"CODE"
 
 	jsr     pusha
-	ldy     #$02
+	ldy     #$01
+	lda     (sp),y
+	jne     L0002
+	iny
 	lda     (sp),y
 	lsr     a
 	jsr     pusha
@@ -201,10 +204,10 @@ _brush_ptrs:
 	jsr     decsp3
 	lda     #$00
 	ldy     #$01
-L000D:	sta     (sp),y
+L0017:	sta     (sp),y
 	ldy     #$04
 	cmp     (sp),y
-	jcs     L0004
+	bcs     L0005
 	dey
 	lda     (sp),y
 	tay
@@ -262,36 +265,79 @@ L000D:	sta     (sp),y
 	sec
 	sbc     #$01
 	jsr     __draw_row_to_sprite
-	ldy     #$05
-	lda     (sp),y
-	beq     L0005
 	ldy     #$01
-	lda     (sp),y
-	clc
-	ldy     #$09
-	adc     (sp),y
-	sec
-	ldy     #$04
-	sbc     (sp),y
-	jsr     __draw_row_to_screen
-	ldy     #$04
-	lda     (sp),y
-	clc
-	ldy     #$09
-	adc     (sp),y
-	sec
-	ldy     #$01
-	sbc     (sp),y
-	sec
-	sbc     #$01
-	jsr     __draw_row_to_screen
-L0005:	ldy     #$01
 	clc
 	tya
 	adc     (sp),y
-	jmp     L000D
-L0004:	ldy     #$0B
-	jmp     addysp
+	bra     L0017
+L0005:	jsr     incsp5
+	bra     L0009
+L0002:	jsr     decsp1
+	ldy     #$03
+	lda     (sp),y
+	lsr     a
+	jsr     pusha
+	lda     #$00
+	ldy     #$01
+L0018:	sta     (sp),y
+	ldy     #$04
+	cmp     (sp),y
+	bcs     L000B
+	iny
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$05
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$09
+	lda     (sp),y
+	sec
+	ldy     #$02
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	clc
+	ldy     #$09
+	adc     (sp),y
+	sec
+	ldy     #$03
+	sbc     (sp),y
+	jsr     __draw_row_to_sprite
+	ldy     #$01
+	clc
+	tya
+	adc     (sp),y
+	bra     L0018
+L000B:	jsr     incsp2
+L0009:	lda     (sp)
+	beq     L000E
+	jsr     decsp1
+	ldy     #$03
+	lda     (sp),y
+	lsr     a
+	jsr     pusha
+	lda     #$00
+	ldy     #$01
+L0019:	sta     (sp),y
+	ldy     #$04
+	cmp     (sp),y
+	bcs     L0010
+	ldy     #$01
+	lda     (sp),y
+	clc
+	ldy     #$06
+	adc     (sp),y
+	sec
+	sbc     (sp)
+	jsr     __draw_row_to_screen
+	ldy     #$01
+	clc
+	tya
+	adc     (sp),y
+	bra     L0019
+L0010:	jsr     incsp2
+L000E:	jmp     incsp6
 
 .endproc
 

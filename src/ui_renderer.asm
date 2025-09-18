@@ -12,6 +12,10 @@
 .export __ui_size_x
 .export __ui_size_y
 .export __ui_palette
+.export __ui_var_ptr_low
+.export __ui_var_ptr_high
+.export __ui_var_val
+.export __ui_var_old_val
 .export __ui_var_1
 .export __ui_var_2
 .export __ui_var_3
@@ -43,11 +47,12 @@
 .export __draw_ui_hline
 .export __draw_ui_vline
 .export __draw_ui_icon
+.export __draw_ui_slider
 
 .export __test_on_mouse_func
 .export __press_toggle_button_mouse_func
 
-__MAX_UI_ELEMENTS = 100
+__MAX_UI_ELEMENTS = 30
 
 __focus_id: .byte $00
 __mouse_data = ZP_MOUSE
@@ -60,6 +65,10 @@ __ui_position_y: .res __MAX_UI_ELEMENTS, $00
 __ui_size_x: .res __MAX_UI_ELEMENTS, $00
 __ui_size_y: .res __MAX_UI_ELEMENTS, $00
 __ui_palette: .res __MAX_UI_ELEMENTS, $F0
+__ui_var_ptr_low: .res __MAX_UI_ELEMENTS, $00
+__ui_var_ptr_high: .res __MAX_UI_ELEMENTS, $00
+__ui_var_val: .res __MAX_UI_ELEMENTS, $00
+__ui_var_old_val: .RES __MAX_UI_ELEMENTS, $00
 __ui_var_1: .res __MAX_UI_ELEMENTS, $00
 __ui_var_2: .res __MAX_UI_ELEMENTS, $00
 __ui_var_3: .res __MAX_UI_ELEMENTS, $00
@@ -106,8 +115,9 @@ __clear_ui_layer:
     @row_loop:
         ldy #LAYER_HEIGHT
         @column_loop:
-        sta VERA_data0
+        ; sta VERA_data0
         stz VERA_data0
+        sta VERA_data0
 
         dey
         bne @column_loop
@@ -192,7 +202,7 @@ __update_ui_element_position:
     lda __ui_type,y
     beq __end_position_loop
     
-    lda __ui_parent,x
+    lda __ui_parent,y
     tax
     lda __ui_global_pos_x,x
     sta X_POS_STACK
@@ -242,13 +252,17 @@ __update_ui_element_position:
     __end_position_loop:
         rts
 
+FIRST_UI_ID = ZP_PTR_11
 __draw_ui_element:
     tax ;transfer the ui element id to x 
+    sta FIRST_UI_ID
     
     lda __ui_type,x
     beq @end_render_loop
-    
-    ; render parent element
+
+
+    @child_render_loop:
+    ; render ui element
         lda __ui_rend_func_low,x
         sta RENDER_FUNC_ADDR
         lda __ui_rend_func_high,x
@@ -258,16 +272,28 @@ __draw_ui_element:
         jsr __indirect_jump
         plx
 
+    ; go to the next ui element
     lda __ui_first_child,x
+    beq @skip_drawing_first_child
+    tax
+    jmp @child_render_loop
+
+    @skip_drawing_first_child:
+    lda __ui_next_sib,x
+    beq @skip_drawing_sibling
+    tax
+    jmp @child_render_loop
+
+
+    @skip_drawing_sibling:
+    lda __ui_parent,x
     beq @end_render_loop
-
-    @child_render_loop:
-        pha
-        jsr __draw_ui_element
-        plx
-        lda __ui_next_sib,x
-        beq @end_render_loop
-
+    cmp FIRST_UI_ID
+    beq @end_render_loop
+    tax
+    lda __ui_next_sib,x
+    beq @end_render_loop
+    tax
     jmp @child_render_loop
     
     @end_render_loop:
@@ -281,9 +307,9 @@ __draw_ui_text:
     init_draw_ui
 
     ; get a pointer to the text from ui variables
-    lda __ui_var_1, x
+    lda __ui_var_ptr_low, x
     sta CHAR_PTR
-    lda __ui_var_2, x
+    lda __ui_var_ptr_high, x
     sta CHAR_PTR+1
 
     @text_render_loop:
@@ -546,6 +572,75 @@ __draw_ui_vline:
     @end_vline:
     rts
 
+
+SLIDER_GFX_ADDR = 112
+SLIDER_PTR_ADDR = ZP_PTR_1
+SLIDER_VAL = ZP_PTR_2
+__draw_ui_slider:
+    init_draw_ui
+
+    lda __ui_size_x, x
+    tay
+
+    lda __ui_var_ptr_low, x
+    sta SLIDER_PTR_ADDR
+    lda __ui_var_ptr_high, x
+    sta SLIDER_PTR_ADDR+1
+
+    lda (SLIDER_PTR_ADDR)
+    sta SLIDER_VAL
+
+    @draw_slider_full_col_loop: 
+    lda SLIDER_VAL
+    cmp #8
+    bmi @end_full_loop
+        lda #(SLIDER_GFX_ADDR+8)
+        sta VERA_data0
+        lda PAL
+        sta VERA_data0 
+
+    lda SLIDER_VAL
+    sec
+    sbc #8
+    sta SLIDER_VAL
+
+    dey
+    bne @draw_slider_full_col_loop
+
+    cpy #0
+    beq @skip_empty_tiles
+
+    @end_full_loop:
+    
+    ; draw semi filled tile
+        lda #SLIDER_GFX_ADDR
+        clc
+        adc SLIDER_VAL
+        sta VERA_data0
+        lda PAL
+        sta VERA_data0 
+    
+    dey
+    beq @skip_empty_tiles
+
+
+    @draw_slider_empty_col_loop: 
+        lda #SLIDER_GFX_ADDR
+        sta VERA_data0
+        lda PAL
+        sta VERA_data0 
+
+    dey
+    bne @draw_slider_empty_col_loop
+
+    @skip_empty_tiles:
+
+    rts
+
+
+__draw_empty_ui:
+    rts
+
 __test_on_mouse_func:
     brk
     rts
@@ -557,12 +652,12 @@ VAR_PTR = ZP_PTR_1
 __press_toggle_button_mouse_func:
     tax
 
-    lda __ui_var_2,x
+    lda __ui_var_ptr_low,x
     sta VAR_PTR
-    lda __ui_var_3,x
+    lda __ui_var_ptr_high,x
     sta VAR_PTR+1
 
-    lda __ui_var_4,x
+    lda __ui_var_val,x
     sta (VAR_PTR)
 
     lda __ui_parent,x

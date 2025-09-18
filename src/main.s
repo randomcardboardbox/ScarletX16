@@ -23,6 +23,8 @@
 	.import		__initialize_mouse
 	.import		__get_mouse_input
 	.import		__draw_ui_element
+	.import		__update_ui_element_position
+	.import		__clear_ui_layer
 	.import		_set_layer_config
 	.import		_initialize_paint_ui
 	.import		_change_tool
@@ -42,16 +44,18 @@
 	.import		_tool_handler
 	.import		_set_pal_icon_sprites
 	.import		_tool_ui_handler
-	.import		_brush_ui_handler
 	.export		_filename
 	.export		_load_bmx_file
 	.export		_save_bmx_file
+	.export		_timer
 	.export		_main
 
 .segment	"DATA"
 
 _filename:
-	.byte	$41,$52,$54,$48,$55,$52,$2E,$42,$4D,$58,$00
+	.byte	$42,$52,$45,$41,$4B,$46,$41,$53,$54,$2E,$42,$4D,$58,$00
+_timer:
+	.byte	$00
 
 ; ---------------------------------------------------------------
 ; void __near__ handle_keyboard_input (void)
@@ -284,11 +288,15 @@ L000D:	lda     #$0F
 	jsr     _load_bmx_file
 	jsr     _init_canvas_vera_sprites
 	jsr     __render_palette_sprites
+	ldx     #$00
+	txa
+	jsr     __clear_ui_layer
+	lda     #$00
+	jsr     __update_ui_element_position
 	lda     #$00
 	jsr     __draw_ui_element
 	jsr     __draw_canvas_to_screen
 	jsr     _set_pal_icon_sprites
-	jsr     _brush_ui_handler
 L0002:	jsr     __wait_for_nmi
 	jsr     __get_mouse_input
 	jsr     _parse_mouse_input

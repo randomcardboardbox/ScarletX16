@@ -6,6 +6,8 @@
         "ui_utils.h": "c",
         "history_stack.h": "c",
         "tool_ui.h": "c",
-        "tool_globals.h": "c"
+        "tool_globals.h": "c",
+        "paint_ui.h": "c",
+        "stdio.h": "c"
     }
 }

@@ -98,7 +98,7 @@ void initialize_paint_ui(){
     _ui_rend_func_high[0] = (int)(&_empty_draw_func)>>8;
 
     _load_file_into_vram("d0font.spr", 10, 0, 0x0000);
-    _load_file_into_vram("d0mouse.spr", 12, 1, 0x3000);
+    _load_file_into_vram("d0mouse.spr", 12, 1, 0x6000);
     _load_palette_from_file("font.pal", 9, 14);
 
     header_container_id =   create_ui_element(0, UI_BOX, 0, 0, 40, 3, _draw_ui_box, NULL);
@@ -113,7 +113,4 @@ void initialize_paint_ui(){
     _set_sprite_attribute(8, palette_spr_adrr_2, 1, PAL_SPR_X, PAL_SPR_Y+64, 0b00001100, 0b1111, 0);
 
     initialize_tool_ui();
-
-    _update_ui_element_position(0);
-    _clear_ui_layer(tilemap0_addr);
 }

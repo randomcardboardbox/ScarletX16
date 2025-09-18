@@ -63,22 +63,21 @@
 	.export		_set_colour
 	.export		_eye_dropper_tool
 	.export		_handle_key_command
-	.export		_icon_x
-	.export		_icon_y
-	.export		_get_sprite_position
+	.export		_get_pal_spr_pos_x
+	.export		_get_pal_spr_pos_y
 	.export		_palette_selection_handler
 
 .segment	"DATA"
 
 _mouse_addrs:
-	.dword	$00013200
-	.dword	$00013200
-	.dword	$00013200
-	.dword	$00013200
-	.dword	$00013300
-	.dword	$00013200
-	.dword	$00013200
-	.dword	$00013200
+	.dword	$00016200
+	.dword	$00016200
+	.dword	$00016200
+	.dword	$00016200
+	.dword	$00016300
+	.dword	$00016200
+	.dword	$00016200
+	.dword	$00016200
 _was_drawing_last_frame:
 	.byte	$00
 _old_pix_x:
@@ -87,6 +86,8 @@ _old_pix_y:
 	.byte	$00
 _old_button:
 	.byte	$00
+_brush_type:
+	.byte	$01
 _brush_size:
 	.byte	$02
 _fill_offset_arr_x:
@@ -111,22 +112,16 @@ _abort_flood_fill:
 	.byte	$00
 _line_brush_size:
 	.byte	$04
+_line_brush_type:
+	.byte	$01
 _point_selected:
 	.byte	$00
-_icon_x:
-	.word	$0000
-_icon_y:
-	.word	$0000
 
 .segment	"BSS"
 
-_brush_type:
-	.res	1,$00
 _selection_colour:
 	.res	1,$00
 _fill_colour:
-	.res	1,$00
-_line_brush_type:
 	.res	1,$00
 _previous_point_x:
 	.res	1,$00
@@ -442,12 +437,13 @@ L0005:	bcs     L0002
 	lda     #$00
 	ldx     #$80
 	jsr     tosadd0ax
-	bra     L003A
-L0002:	ldx     #$89
-	lda     #$80
-L003A:	jsr     pushax
+	jsr     pushax
 	lda     #$00
-	jsr     __set_sprite_address
+	bra     L0026
+L0002:	ldx     #$8B
+	lda     #$00
+	jsr     pushax
+L0026:	jsr     __set_sprite_address
 	lda     (sp)
 	and     #$01
 	bne     L002A
@@ -644,19 +640,17 @@ L0024:	lda     (sp)
 
 .segment	"CODE"
 
-	lda     __primary_colour
-	jsr     _get_sprite_position
 	lda     #$05
 	jsr     pusha
 	lda     #$59
 	jsr     pusha0
 	lda     #$00
 	jsr     pusha
-	lda     _icon_x
-	ldx     _icon_x+1
+	lda     __primary_colour
+	jsr     _get_pal_spr_pos_x
 	jsr     pushax
-	lda     _icon_y
-	ldx     _icon_y+1
+	lda     __primary_colour
+	jsr     _get_pal_spr_pos_y
 	jsr     pushax
 	lda     #$0C
 	jsr     pusha
@@ -664,37 +658,27 @@ L0024:	lda     (sp)
 	jsr     pusha
 	lda     #$0F
 	jsr     __set_sprite_attribute
-	lda     __secondary_colour
-	jsr     _get_sprite_position
-	ldx     #$00
-	lda     $0060
-	jsr     decax8
-	clc
-	adc     _icon_x
-	sta     _icon_x
-	txa
-	adc     _icon_x+1
-	sta     _icon_x+1
-	ldx     #$00
-	lda     $0061
-	jsr     decax8
-	clc
-	adc     _icon_y
-	sta     _icon_y
-	txa
-	adc     _icon_y+1
-	sta     _icon_y+1
 	lda     #$06
 	jsr     pusha
 	lda     #$5A
 	jsr     pusha0
 	lda     #$00
 	jsr     pusha
-	lda     _icon_x
-	ldx     _icon_x+1
+	lda     __secondary_colour
+	jsr     _get_pal_spr_pos_x
+	clc
+	adc     $005A
+	bcc     L0002
+	inx
+L0002:	jsr     decax8
 	jsr     pushax
-	lda     _icon_y
-	ldx     _icon_y+1
+	lda     __secondary_colour
+	jsr     _get_pal_spr_pos_y
+	clc
+	adc     $005B
+	bcc     L0003
+	inx
+L0003:	jsr     decax8
 	jsr     pushax
 	lda     #$0C
 	jsr     pusha
@@ -1902,57 +1886,95 @@ L0007:	jsr     pushax
 
 	lda     __current_tool
 	cmp     #$03
-	bne     L0003
+	bne     L000C
 	lda     _keycode
 	cmp     #$1B
-	bne     L0003
+	bne     L000A
 	stz     _point_selected
-L0003:	rts
+	rts
+L000C:	lda     __current_tool
+	bne     L000A
+	lda     _keycode
+	cmp     #$3D
+	bne     L000D
+	lda     #$02
+	clc
+	adc     _brush_size
+	sta     _brush_size
+	cmp     #$11
+	bcc     L000A
+	lda     #$10
+	bra     L000B
+L000D:	lda     _keycode
+	cmp     #$2D
+	bne     L000A
+	lda     _brush_size
+	sec
+	sbc     #$02
+	sta     _brush_size
+	cmp     #$02
+	bcs     L000A
+	lda     #$02
+L000B:	sta     _brush_size
+L000A:	rts
 
 .endproc
 
 ; ---------------------------------------------------------------
-; void __near__ get_sprite_position (unsigned char colour)
+; unsigned int __near__ get_pal_spr_pos_x (unsigned char colour)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
 
-.proc	_get_sprite_position: near
+.proc	_get_pal_spr_pos_x: near
 
 .segment	"CODE"
 
 	jsr     pusha
-	lda     (sp)
+	jsr     decsp2
+	ldy     #$02
+	lda     (sp),y
 	jsr     pusha0
 	lda     $0059
 	jsr     tosumoda0
 	jsr     pushax
-	lda     $0060
+	lda     $005A
 	jsr     tosmula0
-	sta     _icon_x
-	stx     _icon_x+1
-	lda     (sp)
+	jsr     stax0sp
+	ldx     #$00
+	lda     #$F0
+	jsr     addeq0sp
+	jsr     ldax0sp
+	jmp     incsp3
+
+.endproc
+
+; ---------------------------------------------------------------
+; unsigned int __near__ get_pal_spr_pos_y (unsigned char colour)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_get_pal_spr_pos_y: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	jsr     decsp2
+	ldy     #$02
+	lda     (sp),y
 	jsr     pusha0
 	lda     $0059
 	jsr     tosudiva0
 	jsr     pushax
-	lda     $0061
+	lda     $005B
 	jsr     tosmula0
-	sta     _icon_y
-	stx     _icon_y+1
-	lda     #$F0
-	clc
-	adc     _icon_x
-	sta     _icon_x
-	bcc     L0002
-	inc     _icon_x+1
-L0002:	lda     #$60
-	clc
-	adc     _icon_y
-	sta     _icon_y
-	bcc     L0003
-	inc     _icon_y+1
-L0003:	jmp     incsp1
+	jsr     stax0sp
+	ldx     #$00
+	lda     #$60
+	jsr     addeq0sp
+	jsr     ldax0sp
+	jmp     incsp3
 
 .endproc
 
@@ -1972,7 +1994,7 @@ L0003:	jmp     incsp1
 	ldy     #$F0
 	jsr     decaxy
 	jsr     pushax
-	lda     $0060
+	lda     $005A
 	jsr     tosudiva0
 	jsr     pusha
 	ldy     #$03
@@ -1980,7 +2002,7 @@ L0003:	jmp     incsp1
 	ldy     #$60
 	jsr     decaxy
 	jsr     pushax
-	lda     $0061
+	lda     $005B
 	jsr     tosudiva0
 	jsr     pusha
 	ldy     #$01

@@ -22,6 +22,9 @@ u8 create_ui_element(u8 parent_id, u8 type, u8 pos_x, u8 pos_y, u8 size_x, u8 si
             _ui_last_child[i] = 0;
             _ui_parent[i] = parent_id;
 
+            _ui_var_ptr_low[i] = NULL;
+            _ui_var_ptr_high[i] = NULL;
+
             if(_ui_last_child[parent_id] != 0){
                 u8 last_child_id = _ui_last_child[parent_id];
                 
@@ -30,7 +33,6 @@ u8 create_ui_element(u8 parent_id, u8 type, u8 pos_x, u8 pos_y, u8 size_x, u8 si
             }
             else{
                 _ui_first_child[parent_id] = i;
-                _ui_last_child[parent_id] = i;
             }
 
             _ui_last_child[parent_id] = i;
@@ -41,27 +43,51 @@ u8 create_ui_element(u8 parent_id, u8 type, u8 pos_x, u8 pos_y, u8 size_x, u8 si
     }
 }
 
-u8 delete_ui_stack[20];
-u8 del_stack_index = 0;
-u8 delete_ui_element(u8 id){
-    u8 curr_ui_id = _ui_first_child[id];
-    del_stack_index = 0;
-    delete_ui_stack[del_stack_index] = curr_ui_id;
-    del_stack_index += 1;
+u8 delete_ui_element(u8 ui_id){
+    u8 curr_ui_id = _ui_first_child[ui_id];
+    u8 parent_id = _ui_parent[ui_id];
 
-    _ui_type[id] = 0;
+    _ui_type[ui_id] = 0;
+    _ui_no_of_children[parent_id] -= 1; 
+    if(_ui_prev_sib[ui_id] != 0){
+        u8 prev_sib = _ui_prev_sib[ui_id];
+        _ui_next_sib[prev_sib] = _ui_next_sib[ui_id];
+        if(_ui_next_sib[ui_id] == 0) _ui_last_child[parent_id] = prev_sib;
+    }
+    else {
+        _ui_first_child[parent_id] = _ui_next_sib[ui_id];
+        if(_ui_next_sib[ui_id] == 0) _ui_last_child[parent_id] = 0;
+    }
 
-    // while(1){
-    //     curr_ui_id = delete_ui_stack[del_stack_index-1];
-    //     _ui_type[curr_ui_id] = 0;
-    //     del_stack_index -= 1;
+    while(curr_ui_id != 0){
+        _ui_type[curr_ui_id] = 0;
+        if(_ui_first_child[curr_ui_id] != 0){
+            curr_ui_id = _ui_first_child[curr_ui_id];
+        }
+        else if(_ui_next_sib[curr_ui_id] != 0){
+            curr_ui_id = _ui_next_sib[curr_ui_id];
+        }
+        else{
+            u8 curr_parent = _ui_parent[curr_ui_id];
+            if(curr_parent == ui_id) break;
+            curr_ui_id = _ui_next_sib[curr_parent];
+        }
+    }
+}
 
-    //     if(_ui_first_child[curr_ui_id] != 0){
-    //         delete_ui_stack[del_stack_index] = _ui_first_child[curr_ui_id];
-    //     }
-    // }
-
-    _draw_ui_element(_ui_parent[id]);
+void update_ui_elements_from_ptr(){
+    u8 i;
+    for(i=0; i<MAX_UI_ELEMENTS; i++){
+        if(_ui_type[i] == 0){
+            u8 *ptr = (u16)_ui_var_ptr_low[i] + ((u16)_ui_var_ptr_high[i])<<8;
+            if(ptr != NULL){
+                if(*ptr != _ui_var_old_val[i]){
+                    _ui_var_old_val[i] = *ptr;
+                    _draw_ui_element(i);
+                }
+            }
+        }
+    }
 }
 
 u8 keycode;
@@ -92,8 +118,8 @@ u8 check_mouse_over_ui(u8 ui_ind, u8 mouse_x, u8 mouse_y){
     u8 size_x = _ui_size_x[ui_ind];
     u8 size_y = _ui_size_y[ui_ind];
 
-    if((mouse_x >= pos_x && mouse_x <= pos_x+size_x) &&
-    (mouse_y >= pos_y && mouse_y <= pos_y+size_y)){
+    if((mouse_x > pos_x && mouse_x <= pos_x+size_x) &&
+    (mouse_y > pos_y && mouse_y <= pos_y+size_y)){
         u8 new_id = _ui_first_child[ui_ind];    
         if(new_id != 0){
             while(1){
@@ -115,15 +141,23 @@ u8 check_mouse_over_ui(u8 ui_ind, u8 mouse_x, u8 mouse_y){
 }
 
 void init_text_element(u8 ui_id, u16 text_ptr){
-    _ui_var_1[ui_id] = text_ptr;
-    _ui_var_2[ui_id] = text_ptr>>8;
+    _ui_var_ptr_low[ui_id] = text_ptr;
+    _ui_var_ptr_high[ui_id] = text_ptr>>8;
 }
 
 void init_icon_element(u8 ui_id, u8 icon_addr, u16 variable_addr, u8 variable_value){
+    u8* val_ptr = variable_addr;
     _ui_var_1[ui_id] = icon_addr;
-    _ui_var_2[ui_id] = variable_addr;
-    _ui_var_3[ui_id] = variable_addr>>8;
-    _ui_var_4[ui_id] = variable_value;
-    // (*(u8 *)0x0041) = ui_id;
-    // _force_halt();
+    _ui_var_ptr_low[ui_id] = variable_addr;
+    _ui_var_ptr_high[ui_id] = variable_addr>>8;
+    _ui_var_val[ui_id] = variable_value;
+
+    if(*val_ptr == variable_value){
+        _ui_palette[ui_id] = 0xE0;
+    }
+}
+
+void init_slider_element(u8 ui_id, u16 variable_addr){
+    _ui_var_ptr_low[ui_id] = variable_addr;
+    _ui_var_ptr_high[ui_id] = variable_addr>>8;
 }

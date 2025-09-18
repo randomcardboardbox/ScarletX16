@@ -249,14 +249,14 @@ void draw_brush_line(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 brush
     
 }
 
-u32 mouse_addrs[] = {0x13200, 0x13200, 0x13200, 0x13200, 0x13300, 0x13200, 0x13200, 0x13200};
+u32 mouse_addrs[] = {0x16200, 0x16200, 0x16200, 0x16200, 0x16300, 0x16200, 0x16200, 0x16200};
 
 u8 was_drawing_last_frame = 0;
 u8 old_pix_x = 0;
 u8 old_pix_y = 0;
 u8 old_button = 0;
 
-u8 brush_type;
+u8 brush_type = 1;
 u8 brush_size = 2;
 void draw_pixel_to_sprite(u8 pix_x, u8 pix_y, u8 mouse_buttons){
     u8 col;
@@ -266,13 +266,6 @@ void draw_pixel_to_sprite(u8 pix_x, u8 pix_y, u8 mouse_buttons){
 
     if(was_drawing_last_frame) draw_brush_line(old_pix_x, old_pix_y, pix_x, pix_y, col, brush_size, brush_type);
     else draw_brush_to_sprite(pix_x, pix_y, col, brush_size, brush_type, 1);
-    // _draw_canvas_to_screen();
-
-    // if(was_drawing_last_frame) draw_pixel_line(old_pix_x, old_pix_y, pix_x, pix_y, col);
-    // else{
-    //     _draw_row_to_sprite(col, 1, pix_x, pix_y);
-    //     _draw_row_to_screen(pix_y);
-    // }
 
     was_drawing_last_frame = 1;
 }
@@ -336,7 +329,7 @@ void flood_fill(u8 pix_x, u8 pix_y, u8 mouse_buttons){
 }
 
 u8 line_brush_size = 4;
-u8 line_brush_type;
+u8 line_brush_type = 1;
 u8 point_selected = 0;
 u8 previous_point_x;
 u8 previous_point_y;
@@ -372,28 +365,44 @@ void handle_key_command(){
     if(_current_tool == LINE_TOOL) {
         if(keycode == 27) point_selected = 0;
     }
+    else if(_current_tool == DRAW_TOOL) {
+        if(keycode == 61){ 
+            brush_size += 2;
+            if(brush_size > 16) brush_size = 16;
+        }
+        else if(keycode == 45) {
+            brush_size -= 2;
+            if(brush_size < 2) brush_size = 2;
+        }
+    }
 }
 
-u16 icon_x = 0;
-u16 icon_y = 0;
-void get_sprite_position(u8 colour){
+u16 get_pal_spr_pos_x(u8 colour){
+    u16 icon_x;
     icon_x = (colour%PAL_SPR_ROWS)*PAL_SPR_WIDTH;
-    icon_y = (colour/PAL_SPR_ROWS)*PAL_SPR_HEIGHT;
-
     icon_x += PAL_SPR_X;
+    return(icon_x);
+}
+u16 get_pal_spr_pos_y(u8 colour){
+    u16 icon_y;
+    icon_y = (colour/PAL_SPR_ROWS)*PAL_SPR_HEIGHT;
     icon_y += PAL_SPR_Y;
+    return(icon_y);
 }
 
 void set_pal_icon_sprites(){
     #define icon_addr_1 (0xB20>>5)
     #define icon_addr_2 (0xB40>>5)
-    get_sprite_position(_primary_colour);
-    _set_sprite_attribute(5, icon_addr_1, 0, icon_x, icon_y, 0b00001100, 0b0000, 15);
+    _set_sprite_attribute(5, icon_addr_1, 0, 
+        get_pal_spr_pos_x(_primary_colour), 
+        get_pal_spr_pos_y(_primary_colour), 
+        0b00001100, 0b0000, 15);
 
-    get_sprite_position(_secondary_colour);
-    icon_x += PAL_SPR_WIDTH-8;
-    icon_y += PAL_SPR_HEIGHT-8;
-    _set_sprite_attribute(6, icon_addr_2, 0, icon_x, icon_y, 0b00001100, 0b0000, 15);
+
+    _set_sprite_attribute(6, icon_addr_2, 0, 
+        get_pal_spr_pos_x(_secondary_colour)+PAL_SPR_WIDTH-8, 
+        get_pal_spr_pos_y(_secondary_colour)+PAL_SPR_HEIGHT-8, 
+        0b00001100, 0b0000, 15);
 }
 
 void palette_selection_handler(u16 mouse_x, u16 mouse_y, u8 mouse_buttons){
@@ -419,7 +428,7 @@ void tool_handler(){
     if(mouse_x >= 96 && mouse_x < 224 && mouse_y >= 40 && mouse_y < 168){
         _set_sprite_address((mouse_addrs[_current_tool]>>5)+0x8000, 0);
     }
-    else _set_sprite_address((0x13000>>5)+0x8000, 0);
+    else _set_sprite_address((0x16000>>5)+0x8000, 0);
 
     if(mouse_buttons & M_LEFT_BUT || mouse_buttons & M_RIGHT_BUT){
         if(mouse_x >= 96 && mouse_x < 224 && mouse_y >= 40 && mouse_y < 168){

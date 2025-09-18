@@ -14,6 +14,7 @@
 	.export		_delete_ui_element
 	.export		_init_text_element
 	.export		_init_icon_element
+	.export		_init_slider_element
 	.export		_parse_mouse_input
 	.export		_get_keycode
 	.export		_check_mouse_over_ui
@@ -26,10 +27,12 @@
 	.import		__ui_position_y
 	.import		__ui_size_x
 	.import		__ui_size_y
+	.import		__ui_palette
+	.import		__ui_var_ptr_low
+	.import		__ui_var_ptr_high
+	.import		__ui_var_old_val
+	.import		__ui_var_val
 	.import		__ui_var_1
-	.import		__ui_var_2
-	.import		__ui_var_3
-	.import		__ui_var_4
 	.import		__ui_rend_func_low
 	.import		__ui_rend_func_high
 	.import		__ui_on_mouse
@@ -40,20 +43,12 @@
 	.import		__ui_next_sib
 	.import		__ui_prev_sib
 	.import		__draw_ui_element
-	.export		_delete_ui_stack
-	.export		_del_stack_index
-
-.segment	"DATA"
-
-_del_stack_index:
-	.byte	$00
+	.export		_update_ui_elements_from_ptr
 
 .segment	"BSS"
 
 _keycode:
 	.res	1,$00
-_delete_ui_stack:
-	.res	20,$00
 
 ; ---------------------------------------------------------------
 ; unsigned char __near__ create_ui_element (unsigned char parent_id, unsigned char type, unsigned char pos_x, unsigned char pos_y, unsigned char size_x, unsigned char size_y, unsigned int render_func, unsigned int mouse_func)
@@ -68,10 +63,10 @@ _delete_ui_stack:
 	jsr     pushax
 	jsr     decsp1
 	lda     #$01
-L0020:	sta     (sp)
+L0021:	sta     (sp)
 	ldx     #$00
 	lda     (sp)
-	cmp     #$64
+	cmp     #$1E
 	jcs     L0003
 	tay
 	lda     __ui_type,y
@@ -120,10 +115,10 @@ L000E:	sta     ptr1
 	ldx     #$00
 	lda     (sp)
 	asl     a
-	bcc     L0021
+	bcc     L0022
 	inx
 	clc
-L0021:	adc     #<(__ui_on_mouse)
+L0022:	adc     #<(__ui_on_mouse)
 	sta     ptr1
 	txa
 	adc     #>(__ui_on_mouse)
@@ -159,10 +154,19 @@ L0021:	adc     #<(__ui_on_mouse)
 	ldy     #$0A
 	lda     (sp),y
 	sta     __ui_parent,x
+	lda     (sp)
+	tay
+	lda     #$00
+	sta     __ui_var_ptr_low,y
+	lda     (sp)
+	tay
+	lda     #$00
+	sta     __ui_var_ptr_high,y
+	ldy     #$0A
 	lda     (sp),y
 	tay
 	lda     __ui_last_child,y
-	beq     L0015
+	beq     L0017
 	ldy     #$0A
 	lda     (sp),y
 	tay
@@ -178,18 +182,13 @@ L0021:	adc     #<(__ui_on_mouse)
 	lda     (sp)
 	sta     __ui_prev_sib,x
 	jsr     incsp1
-	bra     L001A
-L0015:	ldy     #$0A
+	bra     L001C
+L0017:	ldy     #$0A
 	lda     (sp),y
 	tax
 	lda     (sp)
 	sta     __ui_first_child,x
-	ldy     #$0A
-	lda     (sp),y
-	tax
-	lda     (sp)
-	sta     __ui_last_child,x
-L001A:	ldy     #$0A
+L001C:	ldy     #$0A
 	lda     (sp),y
 	tax
 	lda     (sp)
@@ -199,9 +198,9 @@ L001A:	ldy     #$0A
 	ldy     #$0A
 	clc
 	adc     (sp),y
-	bcc     L001E
+	bcc     L001F
 	inx
-L001E:	sta     sreg
+L001F:	sta     sreg
 	stx     sreg+1
 	sta     ptr1
 	stx     ptr1+1
@@ -214,14 +213,14 @@ L001E:	sta     sreg
 L0004:	clc
 	lda     #$01
 	adc     (sp)
-	jmp     L0020
+	jmp     L0021
 L0003:	ldy     #$0B
 	jmp     addysp
 
 .endproc
 
 ; ---------------------------------------------------------------
-; unsigned char __near__ delete_ui_element (unsigned char id)
+; unsigned char __near__ delete_ui_element (unsigned char ui_id)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
@@ -235,22 +234,139 @@ L0003:	ldy     #$0B
 	tay
 	lda     __ui_first_child,y
 	jsr     pusha
-	stz     _del_stack_index
-	lda     (sp)
-	ldy     _del_stack_index
-	sta     _delete_ui_stack,y
-	inc     _del_stack_index
 	ldy     #$01
 	lda     (sp),y
+	tay
+	lda     __ui_parent,y
+	jsr     pusha
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     #$00
+	sta     __ui_type,y
+	lda     #<(__ui_no_of_children)
+	ldx     #>(__ui_no_of_children)
+	clc
+	adc     (sp)
+	bcc     L0005
+	inx
+L0005:	sta     sreg
+	stx     sreg+1
+	sta     ptr1
+	stx     ptr1+1
+	lda     (ptr1)
+	dea
+	sta     (sreg)
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     __ui_prev_sib,y
+	beq     L0006
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     __ui_prev_sib,y
+	jsr     pusha
+	lda     #<(__ui_next_sib)
+	ldx     #>(__ui_next_sib)
+	clc
+	adc     (sp)
+	bcc     L0009
+	inx
+L0009:	sta     ptr1
+	stx     ptr1+1
+	ldy     #$03
+	lda     (sp),y
+	tay
+	lda     __ui_next_sib,y
+	sta     (ptr1)
+	ldy     #$03
+	lda     (sp),y
+	tay
+	lda     __ui_next_sib,y
+	jne     L0023
+	ldy     #$01
+	lda     (sp),y
+	tax
+	lda     (sp)
+	sta     __ui_last_child,x
+	jmp     L0023
+L0006:	lda     #<(__ui_first_child)
+	ldx     #>(__ui_first_child)
+	clc
+	adc     (sp)
+	bcc     L000F
+	inx
+L000F:	sta     ptr1
+	stx     ptr1+1
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     __ui_next_sib,y
+	sta     (ptr1)
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     __ui_next_sib,y
+	bne     L001F
+	lda     (sp)
+	tay
+	lda     #$00
+	sta     __ui_last_child,y
+	bra     L001F
+L0026:	lda     (sp),y
 	tay
 	lda     #$00
 	sta     __ui_type,y
 	ldy     #$01
 	lda     (sp),y
 	tay
+	lda     __ui_first_child,y
+	beq     L0018
+	ldy     #$01
+	lda     (sp),y
+	tay
+	ldx     #$00
+	lda     __ui_first_child,y
+	ldy     #$01
+	sta     (sp),y
+	bra     L0025
+L0018:	ldy     #$01
+	lda     (sp),y
+	tay
+	lda     __ui_next_sib,y
+	beq     L001C
+	ldy     #$01
+	lda     (sp),y
+	tay
+	ldx     #$00
+	lda     __ui_next_sib,y
+	ldy     #$01
+	sta     (sp),y
+	bra     L0025
+L001C:	ldy     #$01
+	lda     (sp),y
+	tay
 	lda     __ui_parent,y
-	jsr     __draw_ui_element
-	jmp     incsp2
+	jsr     pusha
+	ldx     #$00
+	lda     (sp)
+	ldy     #$03
+	cmp     (sp),y
+	bne     L0021
+	jsr     incsp1
+	jmp     incsp3
+L0021:	lda     (sp)
+	tay
+	lda     __ui_next_sib,y
+	ldy     #$02
+	sta     (sp),y
+L0023:	jsr     incsp1
+L001F:	ldy     #$01
+	ldx     #$00
+L0025:	lda     (sp),y
+	bne     L0026
+	jmp     incsp3
 
 .endproc
 
@@ -269,9 +385,9 @@ L0003:	ldy     #$0B
 	lda     (sp),y
 	tax
 	lda     (sp)
-	sta     __ui_var_1,x
-	lda     #<(__ui_var_2)
-	ldx     #>(__ui_var_2)
+	sta     __ui_var_ptr_low,x
+	lda     #<(__ui_var_ptr_high)
+	ldx     #>(__ui_var_ptr_high)
 	ldy     #$02
 	clc
 	adc     (sp),y
@@ -298,6 +414,8 @@ L0003:	sta     ptr1
 
 	jsr     pusha
 	ldy     #$04
+	jsr     pushwysp
+	ldy     #$06
 	lda     (sp),y
 	tax
 	dey
@@ -306,27 +424,72 @@ L0003:	sta     ptr1
 	iny
 	lda     (sp),y
 	tax
-	ldy     #$01
+	ldy     #$03
 	lda     (sp),y
-	sta     __ui_var_2,x
-	lda     #<(__ui_var_3)
-	ldx     #>(__ui_var_3)
-	ldy     #$04
+	sta     __ui_var_ptr_low,x
+	lda     #<(__ui_var_ptr_high)
+	ldx     #>(__ui_var_ptr_high)
+	ldy     #$06
 	clc
 	adc     (sp),y
 	bcc     L0004
 	inx
 L0004:	sta     ptr1
 	stx     ptr1+1
-	ldy     #$02
+	ldy     #$04
 	lda     (sp),y
 	sta     (ptr1)
-	ldy     #$04
+	ldy     #$06
+	lda     (sp),y
+	tax
+	ldy     #$02
+	lda     (sp),y
+	sta     __ui_var_val,x
+	jsr     ldax0sp
+	sta     ptr1
+	stx     ptr1+1
+	lda     (ptr1)
+	ldy     #$02
+	cmp     (sp),y
+	bne     L0006
+	ldy     #$06
+	lda     (sp),y
+	tay
+	lda     #$E0
+	sta     __ui_palette,y
+L0006:	jmp     incsp7
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ init_slider_element (unsigned char ui_id, unsigned int variable_addr)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_init_slider_element: near
+
+.segment	"CODE"
+
+	jsr     pushax
+	ldy     #$02
 	lda     (sp),y
 	tax
 	lda     (sp)
-	sta     __ui_var_4,x
-	jmp     incsp5
+	sta     __ui_var_ptr_low,x
+	lda     #<(__ui_var_ptr_high)
+	ldx     #>(__ui_var_ptr_high)
+	ldy     #$02
+	clc
+	adc     (sp),y
+	bcc     L0003
+	inx
+L0003:	sta     ptr1
+	stx     ptr1+1
+	dey
+	lda     (sp),y
+	sta     (ptr1)
+	jmp     incsp3
 
 .endproc
 
@@ -468,6 +631,7 @@ L0004:	jmp     incsp3
 	ldy     #$03
 	cmp     (sp),y
 	bcc     L001B
+	beq     L001B
 	ldy     #$05
 	lda     (sp),y
 	jsr     pusha0
@@ -490,6 +654,7 @@ L0008:	ldy     #$04
 	ldy     #$02
 	cmp     (sp),y
 	bcc     L001C
+	beq     L001C
 	ldy     #$04
 	lda     (sp),y
 	jsr     pusha0
@@ -548,6 +713,78 @@ L0013:	ldy     #$07
 	lda     (sp),y
 	jsr     incsp1
 	jmp     incsp7
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ update_ui_elements_from_ptr (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_update_ui_elements_from_ptr: near
+
+.segment	"CODE"
+
+	jsr     decsp1
+	lda     #$00
+L0010:	sta     (sp)
+	cmp     #$1E
+	bcs     L0003
+	lda     (sp)
+	tay
+	lda     __ui_type,y
+	bne     L0004
+	lda     (sp)
+	tay
+	lda     __ui_var_ptr_low,y
+	sta     ptr1
+	lda     (sp)
+	tay
+	lda     __ui_var_ptr_high,y
+	clc
+	adc     ptr1
+	tax
+	lda     #$00
+	jsr     pushax
+	lda     (sp)
+	ldy     #$01
+	ora     (sp),y
+	beq     L000C
+	jsr     ldax0sp
+	sta     ptr1
+	stx     ptr1+1
+	lda     (ptr1)
+	sta     ptr1
+	ldy     #$02
+	lda     (sp),y
+	tay
+	lda     __ui_var_old_val,y
+	cmp     ptr1
+	beq     L000C
+	lda     #<(__ui_var_old_val)
+	ldx     #>(__ui_var_old_val)
+	ldy     #$02
+	clc
+	adc     (sp),y
+	bcc     L000E
+	inx
+L000E:	sta     sreg
+	stx     sreg+1
+	jsr     ldax0sp
+	sta     ptr1
+	stx     ptr1+1
+	lda     (ptr1)
+	sta     (sreg)
+	ldy     #$02
+	lda     (sp),y
+	jsr     __draw_ui_element
+L000C:	jsr     incsp2
+L0004:	clc
+	lda     #$01
+	adc     (sp)
+	bra     L0010
+L0003:	jmp     incsp1
 
 .endproc
 

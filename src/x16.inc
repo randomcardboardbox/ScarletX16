@@ -87,8 +87,8 @@ __history_stack_addr = $56
 __history_stack_bank = $58
 
 __pal_spr_rows = $59
-__pal_spr_width = $60
-__pal_spr_height = $61
+__pal_spr_width = $5A
+__pal_spr_height = $5B
 
 ZP_MOUSE          = $62
 
