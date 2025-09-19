@@ -114,7 +114,7 @@ _context_container_id:
 	stz     $9F30+1
 	stz     $9F32
 	stz     $9F32+1
-	lda     #$22
+	lda     #$21
 	sta     $9F2D
 	lda     _tilemap0_addr+3
 	sta     sreg+1
@@ -471,7 +471,7 @@ L0009:	sta     (sp),y
 	ldy     #$02
 	ldx     #$00
 	lda     (sp),y
-	ldy     #$90
+	ldy     #$60
 	jsr     incaxy
 	jsr     pusha
 	lda     #<(__current_tool)

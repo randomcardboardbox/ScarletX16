@@ -24,7 +24,7 @@ void set_layer_config(){
 
     L0_HSCROLL = 0;
     L0_VSCROLL = 0;
-    L0_CONFIG = 0b00100010;
+    L0_CONFIG = 0b00100001;
     L0_MAPBASE = (tilemap0_addr >> 9);
     L0_TILEBASE = 0b00000000 | ((tileset0_addr>>9)&0b11111100);
 
@@ -65,6 +65,7 @@ void change_tool(u8 new_tool){
 }
 
 char tool_text[] = "-tools";
+#define TOOL_ICON_ADDR 96
 initialize_tool_ui(){
     u8 i;
     u8 x=2;
@@ -76,7 +77,7 @@ initialize_tool_ui(){
 
     for(i=0; i<8; i++){
         icon = create_ui_element(tool_container_id, UI_TOGGLE_BUT, x, y, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
-        init_icon_element(icon, 144+gfx_addr_offset, &_current_tool, i);
+        init_icon_element(icon, TOOL_ICON_ADDR+gfx_addr_offset, &_current_tool, i);
         x += 2;
 
         if(i == 0) _ui_palette[icon] = 0xE0;

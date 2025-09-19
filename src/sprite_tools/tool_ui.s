@@ -174,7 +174,7 @@ L0007:	lda     __current_tool
 	ldy     #$01
 	sta     (sp),y
 	jsr     pusha
-	lda     #$B4
+	lda     #$84
 	jsr     pusha
 	lda     #<(_brush_type)
 	ldx     #>(_brush_type)
@@ -201,7 +201,7 @@ L0007:	lda     __current_tool
 	ldy     #$01
 	sta     (sp),y
 	jsr     pusha
-	lda     #$B0
+	lda     #$80
 	jsr     pusha
 	lda     #<(_brush_type)
 	ldx     #>(_brush_type)

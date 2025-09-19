@@ -23,7 +23,7 @@ void brush_ui_handler(){
     text_id1 = create_ui_element(context_parent_id, UI_TEXT, 11, 1, 2, 2, _draw_ui_text, NULL);
     init_text_element(text_id1, size_text);
 
-    #define ROUND_BRUSH_ADDR 180
+    #define ROUND_BRUSH_ADDR 132
     icon_id = create_ui_element(context_parent_id, UI_TOGGLE_BUT, 24, 3, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
     init_icon_element(icon_id, ROUND_BRUSH_ADDR, &brush_type, 1);
     icon_id = create_ui_element(context_parent_id, UI_TOGGLE_BUT, 22, 3, 2, 2, _draw_ui_icon, _press_toggle_button_mouse_func);
