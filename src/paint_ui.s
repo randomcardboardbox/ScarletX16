@@ -37,7 +37,6 @@
 	.import		__ui_rend_func_high
 	.import		__ui_first_child
 	.import		__ui_next_sib
-	.import		__draw_ui_element
 	.import		__empty_draw_func
 	.import		__draw_ui_text
 	.import		__draw_ui_box
@@ -326,7 +325,7 @@ _context_container_id:
 	ldy     #$01
 L000E:	sta     (sp),y
 	cmp     #$09
-	bcs     L000F
+	bcs     L0004
 	lda     (sp),y
 	jsr     pusha0
 	lda     __current_tool
@@ -352,9 +351,7 @@ L000D:	sta     __ui_palette,y
 	tya
 	adc     (sp),y
 	bra     L000E
-L000F:	lda     _tool_container_id
-	jsr     __draw_ui_element
-	jmp     incsp3
+L0004:	jmp     incsp3
 
 .endproc
 

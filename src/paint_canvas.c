@@ -94,18 +94,18 @@ void init_canvas_vera_sprites(){
     _display_width = (*bmx_width) * _canvas_scale;
     _display_height = (*bmx_height) * _canvas_scale;
 
-    _set_sprite_attribute(1, sprite_addr, 1, 96,40, 0b00001100, sprite_attr_width_height, 0);
+    _set_sprite_attribute(1, sprite_addr, 1, 96,40, 0b00000100, sprite_attr_width_height, 0);
     sprite_addr += _sprite_vram_size;
     if(_x_axis <= _y_axis){
-        _set_sprite_attribute(2, sprite_addr, 1, 96,104, 0b00001100, sprite_attr_width_height, 0);
+        _set_sprite_attribute(2, sprite_addr, 1, 96,104, 0b00000100, sprite_attr_width_height, 0);
         sprite_addr += _sprite_vram_size;
         _display_has_columns = 0xFF;
     }
     if(_canvas_paint_offset > 0){
-        _set_sprite_attribute(3, sprite_addr, 1, 160,40, 0b00001100, sprite_attr_width_height, 0);
+        _set_sprite_attribute(3, sprite_addr, 1, 160,40, 0b00000100, sprite_attr_width_height, 0);
         sprite_addr += _sprite_vram_size;
         if(_display_has_columns){
-            _set_sprite_attribute(4, sprite_addr, 1, 160,104, 0b00001100, sprite_attr_width_height, 0);
+            _set_sprite_attribute(4, sprite_addr, 1, 160,104, 0b00000100, sprite_attr_width_height, 0);
             sprite_addr += _sprite_vram_size;
         }
     }

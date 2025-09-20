@@ -279,7 +279,7 @@ L000B:	lda     __sprite_size
 	jsr     pusha0
 	lda     #$28
 	jsr     pusha0
-	lda     #$0C
+	lda     #$04
 	jsr     pusha
 	ldy     #$09
 	lda     (sp),y
@@ -304,7 +304,7 @@ L0020:	lda     #$02
 	jsr     pusha0
 	lda     #$68
 	jsr     pusha0
-	lda     #$0C
+	lda     #$04
 	jsr     pusha
 	ldy     #$09
 	lda     (sp),y
@@ -329,7 +329,7 @@ L0021:	lda     __canvas_paint_offset
 	jsr     pusha0
 	lda     #$28
 	jsr     pusha0
-	lda     #$0C
+	lda     #$04
 	jsr     pusha
 	ldy     #$09
 	lda     (sp),y
@@ -352,7 +352,7 @@ L0021:	lda     __canvas_paint_offset
 	jsr     pusha0
 	lda     #$68
 	jsr     pusha0
-	lda     #$0C
+	lda     #$04
 	jsr     pusha
 	ldy     #$09
 	lda     (sp),y

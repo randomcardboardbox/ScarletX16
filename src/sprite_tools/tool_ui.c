@@ -44,7 +44,7 @@ void tool_ui_handler(){
         if(_current_tool == DRAW_TOOL) brush_ui_handler();
 
         _update_ui_element_position(context_container_id);
-        _draw_ui_element(context_container_id);
+        // _draw_ui_element(context_container_id);
     }
     old_tool = _current_tool;
 }

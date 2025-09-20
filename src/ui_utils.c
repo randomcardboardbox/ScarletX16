@@ -86,12 +86,12 @@ void update_ui_elements_from_ptr(){
                     if(*ptr != _ui_var_old_val[i]){
                         if(*ptr != _ui_var_val[i]) _ui_palette[i] = 0xF0; 
                         else _ui_palette[i] = 0xE0; 
-                        _draw_ui_element(i);
+                        // _draw_ui_element(i);
                     }
                 }
                 else if(*ptr != _ui_var_old_val[i]){
                     
-                    _draw_ui_element(i);
+                    // _draw_ui_element(i);
                 }
 
                 _ui_var_old_val[i] = *ptr;

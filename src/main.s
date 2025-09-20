@@ -22,10 +22,12 @@
 	.import		_keycode
 	.import		__initialize_mouse
 	.import		__get_mouse_input
-	.import		__draw_ui_element
 	.import		__update_ui_element_position
 	.import		_update_ui_elements_from_ptr
 	.import		__clear_ui_layer
+	.import		__init_overlay_display
+	.import		__clear_overlay_display
+	.import		__draw_overlay_pixel
 	.import		_set_layer_config
 	.import		_initialize_paint_ui
 	.import		_change_tool
@@ -279,8 +281,7 @@ L000D:	lda     #$0F
 
 .segment	"CODE"
 
-	lda     #$00
-	jsr     pusha
+	jsr     decsp1
 	jsr     __init_irq_handler
 	jsr     __init_screen_mode
 	jsr     _set_layer_config
@@ -292,13 +293,31 @@ L000D:	lda     #$0F
 	ldx     #$00
 	txa
 	jsr     __clear_ui_layer
+	jsr     __init_overlay_display
+	jsr     __clear_overlay_display
 	lda     #$00
 	jsr     __update_ui_element_position
-	lda     #$00
-	jsr     __draw_ui_element
 	jsr     __draw_canvas_to_screen
 	jsr     _set_pal_icon_sprites
-L0002:	jsr     __wait_for_nmi
+	lda     #$00
+L0009:	sta     (sp)
+	cmp     #$0A
+	bcs     L0006
+	lda     #$02
+	jsr     pusha
+	lda     #$C8
+	jsr     pusha
+	ldy     #$02
+	ldx     #$00
+	lda     (sp),y
+	ldy     #$80
+	jsr     incaxy
+	jsr     __draw_overlay_pixel
+	clc
+	lda     #$01
+	adc     (sp)
+	bra     L0009
+L0006:	jsr     __wait_for_nmi
 	jsr     __get_mouse_input
 	jsr     _parse_mouse_input
 	jsr     _get_keycode
@@ -306,7 +325,7 @@ L0002:	jsr     __wait_for_nmi
 	jsr     _tool_handler
 	jsr     _tool_ui_handler
 	jsr     _update_ui_elements_from_ptr
-	bra     L0002
+	bra     L0006
 
 .endproc
 

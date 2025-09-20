@@ -61,7 +61,7 @@ void change_tool(u8 new_tool){
 
         x = _ui_next_sib[x];
     }
-    _draw_ui_element(tool_container_id);
+    // _draw_ui_element(tool_container_id);
 }
 
 char tool_text[] = "-tools";

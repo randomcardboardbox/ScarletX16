@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include "ui_utils.h"
+#include "overlay_render_utils.h"
 #include "paint_ui.h"
 #include "paint_canvas.h"
 #include "history_stack.h"
@@ -79,7 +80,7 @@ void handle_keyboard_input(){
 u8 timer = 0;
 
 int main(){
-    u8 ui_index = 0;
+    u8 i;
 
     _init_irq_handler();
     _init_screen_mode();
@@ -92,11 +93,17 @@ int main(){
     _render_palette_sprites();
 
     _clear_ui_layer(0x10000);
+    _init_overlay_display();
+    _clear_overlay_display();
     _update_ui_element_position(0);
-    _draw_ui_element(0);
+    // _draw_ui_element(0);
     
     _draw_canvas_to_screen();
     set_pal_icon_sprites();
+
+    for(i=0; i<10; i++){
+        _draw_overlay_pixel(2, 200, 128+i);
+    }
 
     while(1){
 

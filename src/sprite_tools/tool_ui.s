@@ -19,7 +19,6 @@
 	.import		_init_text_element
 	.import		_init_icon_element
 	.import		_init_slider_element
-	.import		__draw_ui_element
 	.import		__update_ui_element_position
 	.import		__empty_draw_func
 	.import		__draw_ui_text
@@ -74,8 +73,6 @@ L0005:	lda     __current_tool
 	jsr     _brush_ui_handler
 L0006:	lda     _context_container_id
 	jsr     __update_ui_element_position
-	lda     _context_container_id
-	jsr     __draw_ui_element
 L0007:	lda     __current_tool
 	sta     _old_tool
 	rts
