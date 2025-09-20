@@ -17,7 +17,7 @@
 #define DEVICE 8
 #define SA 2
 #define MODE 0
-char filename[] = "dripzero.bmx";
+char filename[] = "fruit.bmx";
 void load_bmx_file(){
     u16 vram_addr = SPRITE_VRAM_DATA_ADDR;
     u8 ram_bank = 2;
@@ -80,8 +80,6 @@ void handle_keyboard_input(){
 u8 timer = 0;
 
 int main(){
-    u8 i;
-
     _init_irq_handler();
     _init_screen_mode();
     set_layer_config();
@@ -97,6 +95,8 @@ int main(){
     _clear_overlay_display();
     _update_ui_element_position(0);
     // _draw_ui_element(0);
+
+    // _draw_overlay_h_line(2, 2,13, 4);
     
     _draw_canvas_to_screen();
     set_pal_icon_sprites();
@@ -104,6 +104,7 @@ int main(){
     while(1){
 
         _wait_for_nmi();
+        overlay_routines();
 
         _get_mouse_input();
         parse_mouse_input();

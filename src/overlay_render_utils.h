@@ -11,4 +11,6 @@ extern void _draw_overlay_h_line(u8 col, u8 x, u8 y, u8 width);
 extern void _draw_overlay_dotted_v_line(u8 col, u8 x, u8 y, u8 height);
 extern void _draw_overlay_dotted_h_line(u8 col, u8 x, u8 y, u8 width);
 
+extern void overlay_routines(void);
+
 #endif//OVERLAY

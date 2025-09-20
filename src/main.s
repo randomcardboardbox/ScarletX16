@@ -27,8 +27,7 @@
 	.import		__clear_ui_layer
 	.import		__init_overlay_display
 	.import		__clear_overlay_display
-	.import		__draw_overlay_v_line
-	.import		__draw_overlay_h_line
+	.import		_overlay_routines
 	.import		_set_layer_config
 	.import		_initialize_paint_ui
 	.import		_change_tool
@@ -57,7 +56,7 @@
 .segment	"DATA"
 
 _filename:
-	.byte	$44,$52,$49,$50,$5A,$45,$52,$4F,$2E,$42,$4D,$58,$00
+	.byte	$46,$52,$55,$49,$54,$2E,$42,$4D,$58,$00
 _timer:
 	.byte	$00
 
@@ -282,7 +281,6 @@ L000D:	lda     #$0F
 
 .segment	"CODE"
 
-	jsr     decsp1
 	jsr     __init_irq_handler
 	jsr     __init_screen_mode
 	jsr     _set_layer_config
@@ -300,21 +298,8 @@ L000D:	lda     #$0F
 	jsr     __update_ui_element_position
 	jsr     __draw_canvas_to_screen
 	jsr     _set_pal_icon_sprites
-	lda     #$02
-	jsr     pusha
-	lda     #$64
-	jsr     pusha
-	jsr     pusha
-	lda     #$0A
-	jsr     __draw_overlay_v_line
-	lda     #$02
-	jsr     pusha
-	lda     #$64
-	jsr     pusha
-	jsr     pusha
-	lda     #$0A
-	jsr     __draw_overlay_h_line
 L0002:	jsr     __wait_for_nmi
+	jsr     _overlay_routines
 	jsr     __get_mouse_input
 	jsr     _parse_mouse_input
 	jsr     _get_keycode

@@ -8,6 +8,7 @@
         "tool_ui.h": "c",
         "tool_globals.h": "c",
         "paint_ui.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "overlay_render_utils.h": "c"
     }
 }
