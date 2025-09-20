@@ -27,7 +27,8 @@
 	.import		__clear_ui_layer
 	.import		__init_overlay_display
 	.import		__clear_overlay_display
-	.import		__draw_overlay_pixel
+	.import		__draw_overlay_v_line
+	.import		__draw_overlay_h_line
 	.import		_set_layer_config
 	.import		_initialize_paint_ui
 	.import		_change_tool
@@ -299,25 +300,21 @@ L000D:	lda     #$0F
 	jsr     __update_ui_element_position
 	jsr     __draw_canvas_to_screen
 	jsr     _set_pal_icon_sprites
-	lda     #$00
-L0009:	sta     (sp)
-	cmp     #$0A
-	bcs     L0006
 	lda     #$02
 	jsr     pusha
-	lda     #$C8
+	lda     #$64
 	jsr     pusha
-	ldy     #$02
-	ldx     #$00
-	lda     (sp),y
-	ldy     #$80
-	jsr     incaxy
-	jsr     __draw_overlay_pixel
-	clc
-	lda     #$01
-	adc     (sp)
-	bra     L0009
-L0006:	jsr     __wait_for_nmi
+	jsr     pusha
+	lda     #$0A
+	jsr     __draw_overlay_v_line
+	lda     #$02
+	jsr     pusha
+	lda     #$64
+	jsr     pusha
+	jsr     pusha
+	lda     #$0A
+	jsr     __draw_overlay_h_line
+L0002:	jsr     __wait_for_nmi
 	jsr     __get_mouse_input
 	jsr     _parse_mouse_input
 	jsr     _get_keycode
@@ -325,7 +322,7 @@ L0006:	jsr     __wait_for_nmi
 	jsr     _tool_handler
 	jsr     _tool_ui_handler
 	jsr     _update_ui_elements_from_ptr
-	bra     L0006
+	bra     L0002
 
 .endproc
 

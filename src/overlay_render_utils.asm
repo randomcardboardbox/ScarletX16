@@ -97,12 +97,14 @@ __draw_pixel_internal:
         sta DRAW_ADDR
 
     ; selecting the block within a row
-        asl X_POS
+        lda X_POS
+        asl
+        pha
         lda #0
         adc #0
         sta DRAW_ADDR+1
 
-        lda X_POS
+        pla
         and #(%11110000)
         clc
         adc DRAW_ADDR
@@ -136,27 +138,34 @@ __draw_pixel_internal:
         sta VERA_addr_bank
 
     ; drawing pixel to the overlay
+        lda X_POS
+        and #(%00000011) 
+        tax
         lda VERA_data0
-        ldx X_POS
+
         
-        cpx #(0<<1)
+        cpx #0
         bne @skip_pix_one
+        and #(%00111111)
         ora COLOUR+3
         jmp @place_pixel_in_vram
 
         @skip_pix_one:
-        cpx #(1<<1)
+        cpx #1
         bne @skip_pix_two
+        and #(%11001111)
         ora COLOUR+2
         jmp @place_pixel_in_vram
 
         @skip_pix_two:
-        cpx #(2<<1)
+        cpx #2
         bne @skip_pix_three
+        and #(%11110011)
         ora COLOUR+1
         jmp @place_pixel_in_vram
 
         @skip_pix_three:
+        and #(%11111100)
         ora COLOUR
 
         @place_pixel_in_vram:
@@ -191,13 +200,75 @@ __draw_overlay_pixel:
 
 ; void __draw_overlay_v_line(u8 col, u8 x, u8 y, u8 height)
 __draw_overlay_v_line:
+    ; load variables into zero page 
+        tay
+
+        lda (sp)
+        sta Y_POS
+        inc sp
+
+        lda (sp)
+        sta X_POS
+        inc sp
+
+        lda (sp)
+        sta COLOUR
+        asl 
+        asl 
+        sta COLOUR+1
+        asl 
+        asl 
+        sta COLOUR+2
+        asl
+        asl 
+        sta COLOUR+3
+        inc sp
+
+    @pixel_render_loop:
+        jsr __draw_pixel_internal
+        inc Y_POS
+
+    dey
+    bne @pixel_render_loop
+
     rts
+
 
 ; void __draw_overlay_v_line(u8 col, u8 x, u8 y, u8 width)
 __draw_overlay_h_line:
+    ; load variables into zero page 
+        tay
+
+        lda (sp)
+        sta Y_POS
+        inc sp
+
+        lda (sp)
+        sta X_POS
+        inc sp
+
+        lda (sp)
+        sta COLOUR
+        asl 
+        asl 
+        sta COLOUR+1
+        asl 
+        asl 
+        sta COLOUR+2
+        asl
+        asl 
+        sta COLOUR+3
+        inc sp
+
+    @pixel_render_loop:
+        jsr __draw_pixel_internal
+        inc X_POS
+
+    dey
+    bne @pixel_render_loop
+
     rts
 
-draw_overlay_dotted_v_line:
+__draw_overlay_dotted_v_line:
     rts
-draw_overlay_dotted_h_line:
-    rts
+__draw_overlay_dotted_h_line:

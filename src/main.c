@@ -101,10 +101,6 @@ int main(){
     _draw_canvas_to_screen();
     set_pal_icon_sprites();
 
-    for(i=0; i<10; i++){
-        _draw_overlay_pixel(2, 200, 128+i);
-    }
-
     while(1){
 
         _wait_for_nmi();
