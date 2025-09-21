@@ -61,7 +61,7 @@ void change_tool(u8 new_tool){
 
         x = _ui_next_sib[x];
     }
-    // _draw_ui_element(tool_container_id);
+    _draw_ui_element(tool_container_id);
 }
 
 char tool_text[] = "-tools";
@@ -99,6 +99,7 @@ void initialize_paint_ui(){
     _ui_rend_func_high[0] = (int)(&_empty_draw_func)>>8;
 
     _load_file_into_vram("d0font.spr", 10, 0, 0x0000);
+    _load_file_into_vram("d0palsel.spr", 13, 1, 0x6500);
     _load_file_into_vram("d0mouse.spr", 12, 1, 0x6000);
     _load_palette_from_file("font.pal", 9, 14);
 

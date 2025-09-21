@@ -200,12 +200,15 @@ __draw_overlay_pixel:
     rts
 
 ; void __draw_overlay_v_line(u8 col, u8 x, u8 y, u8 height)
+TEMP_Y = ZP_PTR_7
 __draw_overlay_v_line:
     ; load variables into zero page 
-        tay
+        sta LENGTH
 
         lda (sp)
         sta Y_POS
+        and #(%00000111)
+        sta TEMP_Y
         inc sp
 
         lda (sp)
@@ -214,26 +217,119 @@ __draw_overlay_v_line:
 
         lda (sp)
         sta COLOUR
+        inc sp
         asl 
         asl 
-        sta COLOUR+1
+        ora COLOUR
+        sta COLOUR
         asl 
         asl 
-        sta COLOUR+2
+        ora COLOUR
+        sta COLOUR
         asl
         asl 
-        sta COLOUR+3
-        inc sp
+        ora COLOUR
+        sta COLOUR
 
-    @pixel_render_loop:
-        jsr __draw_pixel_internal
-        inc Y_POS
+        lda X_POS
+        and #(%00000011)
+        tax
+        lda MASK3, x
+        and COLOUR
+        sta COLOUR
 
-    dey
-    bne @pixel_render_loop
+        lda MASK4, x
+        sta TEMP_MASK
 
+    ; selecting the first or second byte of a block row
+        lda X_POS
+        lsr
+        lsr
+        and #(%00000001)
+        sta DRAW_ADDR
+
+    ; selecting the block within a row
+        lda X_POS
+        asl
+        pha
+        lda #0
+        adc #0
+        sta DRAW_ADDR+1
+
+        pla
+        and #(%11110000)
+        clc
+        adc DRAW_ADDR
+        sta DRAW_ADDR
+
+    ; initialize address at the start of the overlay memory
+        lda #(<DRAW_START_ADDR)
+        clc
+        adc DRAW_ADDR
+        sta DRAW_ADDR
+        lda #(>DRAW_START_ADDR)
+        adc DRAW_ADDR+1
+        sta DRAW_ADDR+1 
+
+    ; selecting a block row
+        lda Y_POS
+        lsr
+        lsr
+        and #(%11111110)
+        clc
+        adc DRAW_ADDR+1
+        sta DRAW_ADDR+1
+
+    @column_loop:
+        ; setting up the data port
+            stz VERA_ctrl
+            lda DRAW_ADDR
+            sta VERA_addr_low
+            lda DRAW_ADDR+1
+            sta VERA_addr_high
+            lda #(%00100000)
+            sta VERA_addr_bank
+
+            lda #1
+            sta VERA_ctrl
+            lda DRAW_ADDR
+            sta VERA_addr_low
+            lda DRAW_ADDR+1
+            sta VERA_addr_high
+            clc
+            adc #2
+            sta DRAW_ADDR+1
+            lda #(%00100000)
+            sta VERA_addr_bank
+
+        ldy #8
+        @empty_space_loop:
+        lda TEMP_Y
+        beq @skip_empty_space
+        dec TEMP_Y
+            dey
+            lda VERA_data0
+            lda VERA_data1
+        jmp @empty_space_loop
+
+        @skip_empty_space:
+        
+        @row_loop:
+        lda LENGTH
+        beq @end_vline_render_loop
+        dec LENGTH
+
+            lda VERA_data0
+            and TEMP_MASK
+            ora COLOUR
+            sta VERA_data1
+        dey
+        bne @row_loop
+
+    jmp @column_loop
+    
+    @end_vline_render_loop:
     rts
-
 
 ; void __draw_overlay_v_line(u8 col, u8 x, u8 y, u8 width)
 LENGTH = ZP_PTR_5
@@ -243,6 +339,8 @@ SINGLE_COLOUR = ZP_PTR_8
 X_TEMP = ZP_PTR_9
 MASK1: .byte %11111111, %11111100, %11110000, %11000000
 MASK2: .byte %11111111, %00111111, %00001111, %00000011
+MASK3: .byte %11000000, %00110000, %00001100, %00000011
+MASK4: .byte %00111111, %11001111, %11110011, %11111100
 __draw_overlay_h_line:
     ; load variables into zero page 
         sta LENGTH
@@ -336,18 +434,19 @@ __draw_overlay_h_line:
         stz TEMP_MASK
 
         lda X_POS
-        bit #(%00000100)
-        bpl @
-        
-        and #(%00000011)
+        and #(%00000111)
         sta X_TEMP
 
         tax
         @mask_creation_loop1:
         cpx #0
         beq @end_mask_loop1
-            lsr TEMP_MASK
-            lsr TEMP_MASK
+
+            lsr TEMP_MASK+1
+            ror TEMP_MASK
+            lsr TEMP_MASK+1
+            ror TEMP_MASK
+        
         dex
         jmp @mask_creation_loop1
         @end_mask_loop1:
@@ -367,9 +466,14 @@ __draw_overlay_h_line:
             lda COLOUR_MASK
             ora TEMP_MASK
             sta COLOUR_MASK
+            lda COLOUR_MASK+1
+            ora TEMP_MASK+1
+            sta COLOUR_MASK+1
 
-            lsr TEMP_MASK
-            lsr TEMP_MASK
+            lsr TEMP_MASK+1
+            ror TEMP_MASK
+            lsr TEMP_MASK+1
+            ror TEMP_MASK
 
         dex
         bne @mask_creation_loop2
@@ -377,7 +481,8 @@ __draw_overlay_h_line:
 
         lda COLOUR_MASK
         sta VERA_data1
-        ldx VERA_data0
+        lda COLOUR_MASK+1
+        sta VERA_data0
 
         @skip_first_line:
 

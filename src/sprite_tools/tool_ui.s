@@ -19,6 +19,7 @@
 	.import		_init_text_element
 	.import		_init_icon_element
 	.import		_init_slider_element
+	.import		__draw_ui_element
 	.import		__update_ui_element_position
 	.import		__empty_draw_func
 	.import		__draw_ui_text
@@ -27,6 +28,7 @@
 	.import		__press_toggle_button_mouse_func
 	.import		_brush_size
 	.import		_brush_type
+	.import		_point_selected
 	.export		_slider
 	.export		_context_parent_id
 	.export		_shape_text
@@ -65,6 +67,7 @@ _context_parent_id:
 	lda     _old_tool
 	cmp     __current_tool
 	beq     L0007
+	stz     _point_selected
 	lda     _context_parent_id
 	beq     L0005
 	jsr     _delete_ui_element
@@ -73,6 +76,8 @@ L0005:	lda     __current_tool
 	jsr     _brush_ui_handler
 L0006:	lda     _context_container_id
 	jsr     __update_ui_element_position
+	lda     _context_container_id
+	jsr     __draw_ui_element
 L0007:	lda     __current_tool
 	sta     _old_tool
 	rts

@@ -249,6 +249,46 @@ void draw_brush_line(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 brush
     
 }
 
+void draw_brush_horizontal_line(u8 x, u8 y, u8 width, u8 col, u8 brush_size, u8 brush_type, u8 redraw){
+    u8 i;
+    for(i=0; i<width; i++){
+        draw_brush_to_sprite(x+i, y, col, brush_size, brush_type, redraw);
+    }
+}
+
+void draw_brush_vertical_line(u8 x, u8 y, u8 height, u8 col, u8 brush_size, u8 brush_type, u8 redraw){
+    u8 i;
+    for(i=0; i<height; i++){
+        draw_brush_to_sprite(x, y+i, col, brush_size, brush_type, redraw);
+    }
+}
+
+void draw_brush_circle(u8 cx, u8 cy, u8 radius, u8 col, u8 brush_size, u8 brush_type){
+    i16 x = 0;
+    i16 y = -((i16)radius);
+    i16 p = -((i16)radius);
+
+    while(x < -y){
+        if(p > 0){
+            y += 1;
+            p += 2*(x+y) + 1;
+        }
+        else{
+            p += 2*x + 1;
+        }
+
+        draw_brush_to_sprite(cx+x, cy+y, col, brush_size, brush_type, 1);
+        draw_brush_to_sprite(cx-x, cy+y, col, brush_size, brush_type, 1);
+        draw_brush_to_sprite(cx+x, cy-y, col, brush_size, brush_type, 1);
+        draw_brush_to_sprite(cx-x, cy-y, col, brush_size, brush_type, 1);
+        draw_brush_to_sprite(cx+y, cy+x, col, brush_size, brush_type, 1);
+        draw_brush_to_sprite(cx+y, cy-x, col, brush_size, brush_type, 1);
+        draw_brush_to_sprite(cx-y, cy+x, col, brush_size, brush_type, 1);
+        draw_brush_to_sprite(cx-y, cy-x, col, brush_size, brush_type, 1);
+        x += 1;
+    }
+}
+
 u32 mouse_addrs[] = {0x16200, 0x16200, 0x16200, 0x16200, 0x16300, 0x16200, 0x16200, 0x16200};
 
 u8 was_drawing_last_frame = 0;
@@ -350,6 +390,95 @@ void line_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
     }
 }
 
+u8 circle_brush_size = 2;
+u8 circle_brush_type = 0;
+u8 draw_circle_from_centre = 1;
+void circle_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
+    if(point_selected == 0){
+        point_selected = 1;
+        previous_point_x = pix_x;
+        previous_point_y = pix_y;
+    }
+    else{
+        u16 width;
+        u16 height;
+        u16 dis_temp;
+        u8 distance;
+        u8 col;
+
+        u8 x0;
+        u8 y0;
+
+        point_selected = 0;
+
+        if(mouse_buttons & M_LEFT_BUT) col = _primary_colour;
+        else col = _secondary_colour;
+        
+        if(pix_x > previous_point_x) {
+            width = pix_x-previous_point_x;
+            x0 = previous_point_x;
+        }
+        else {
+            width = previous_point_x-pix_x;
+            x0 = pix_x;
+        }
+        if(pix_y > previous_point_y){
+            height = pix_y-previous_point_y;
+            y0 = previous_point_y;
+        }
+        else{ 
+            height = previous_point_y-pix_y;
+            y0 = pix_y;
+        }
+        
+        dis_temp = width*width + height*height;
+        distance = _square_root(dis_temp); 
+
+        if(draw_circle_from_centre){
+            draw_brush_circle(previous_point_x, previous_point_y, distance, col, circle_brush_size, circle_brush_type);
+        }
+        else{
+            distance = distance >> 1;
+            draw_brush_circle(x0+(width>>1), y0+(height>>1), distance, col, circle_brush_size, circle_brush_type);
+        }
+    }
+}
+
+u8 rect_brush_size = 2;
+u8 rect_brush_type = 0;
+void rectangle_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
+    if(point_selected == 0){
+        point_selected = 1;
+        previous_point_x = pix_x;
+        previous_point_y = pix_y;
+    }
+    else{
+        u8 col;
+        if(mouse_buttons & M_LEFT_BUT) col = _primary_colour;
+        else col = _secondary_colour;
+
+        point_selected = 0;
+        if(previous_point_x < pix_x){
+            draw_brush_horizontal_line(previous_point_x, previous_point_y, pix_x-previous_point_x+1, col, rect_brush_size, rect_brush_type, 0);
+            draw_brush_horizontal_line(previous_point_x, pix_y, pix_x-previous_point_x+1, col, rect_brush_size, rect_brush_type, 0);
+        }
+        else{
+            draw_brush_horizontal_line(pix_x, previous_point_y, previous_point_x-pix_x+1, col, rect_brush_size, rect_brush_type, 0);
+            draw_brush_horizontal_line(pix_x, pix_y, previous_point_x-pix_x+1, col, rect_brush_size, rect_brush_type, 0);
+        }
+
+        if(previous_point_y < pix_y){
+            draw_brush_vertical_line(previous_point_x, previous_point_y, pix_y-previous_point_y+1, col, rect_brush_size, rect_brush_type, 0);
+            draw_brush_vertical_line(pix_x, previous_point_y, pix_y-previous_point_y+1, col, rect_brush_size, rect_brush_type, 1);
+        }
+        else{
+            draw_brush_vertical_line(previous_point_x, pix_y, previous_point_y-pix_y+1, col, rect_brush_size, rect_brush_type, 0);
+            draw_brush_vertical_line(pix_x, pix_y, previous_point_y-pix_y+1, col, rect_brush_size, rect_brush_type, 1);
+        }
+        add_new_history_node();
+    }
+}
+
 void set_colour(u8* addr, u8 new_col){
     *addr = new_col;
     set_pal_icon_sprites();
@@ -364,6 +493,9 @@ void eye_dropper_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
 void handle_key_command(){
     if (keycode != 0) {
         if(_current_tool == LINE_TOOL) {
+            if(keycode == 27) point_selected = 0;
+        }
+        else if(_current_tool == RECT_TOOL){
             if(keycode == 27) point_selected = 0;
         }
         else if(_current_tool == DRAW_TOOL) {
@@ -401,8 +533,8 @@ u16 get_pal_spr_pos_y(u8 colour){
 }
 
 void set_pal_icon_sprites(){
-    #define icon_addr_1 (0xB20>>5)
-    #define icon_addr_2 (0xB40>>5)
+    #define icon_addr_1 (0x16500>>5)
+    #define icon_addr_2 (0x16520>>5)
     _set_sprite_attribute(5, icon_addr_1, 0, 
         get_pal_spr_pos_x(_primary_colour), 
         get_pal_spr_pos_y(_primary_colour), 
@@ -452,6 +584,8 @@ void tool_handler(){
                 else if(_current_tool == BUCKET_TOOL) flood_fill(pix_x, pix_y, mouse_buttons);
                 else if(_current_tool == LINE_TOOL) line_draw_tool(pix_x, pix_y, mouse_buttons);
                 else if(_current_tool == EYEDROPPER_TOOL) eye_dropper_tool(pix_x, pix_y, mouse_buttons);
+                else if(_current_tool == RECT_TOOL) rectangle_draw_tool(pix_x, pix_y, mouse_buttons);
+                else if(_current_tool == CIRCLE_TOOL) circle_draw_tool(pix_x, pix_y, mouse_buttons);
             }
 
             old_pix_x = pix_x;

@@ -37,6 +37,7 @@ void brush_ui_handler(){
 u8 old_tool = LINE_TOOL;
 void tool_ui_handler(){
     if(old_tool != _current_tool){
+        point_selected = 0;
         if(context_parent_id != 0){
             delete_ui_element(context_parent_id);
         }
@@ -44,7 +45,7 @@ void tool_ui_handler(){
         if(_current_tool == DRAW_TOOL) brush_ui_handler();
 
         _update_ui_element_position(context_container_id);
-        // _draw_ui_element(context_container_id);
+        _draw_ui_element(context_container_id);
     }
     old_tool = _current_tool;
 }

@@ -17,7 +17,7 @@
 #define DEVICE 8
 #define SA 2
 #define MODE 0
-char filename[] = "fruit.bmx";
+char filename[] = "dripzero.bmx";
 void load_bmx_file(){
     u16 vram_addr = SPRITE_VRAM_DATA_ADDR;
     u8 ram_bank = 2;
@@ -94,12 +94,12 @@ int main(){
     _init_overlay_display();
     _clear_overlay_display();
     _update_ui_element_position(0);
-    // _draw_ui_element(0);
-
-    // _draw_overlay_h_line(2, 2,13, 4);
+    _draw_ui_element(0);
     
     _draw_canvas_to_screen();
     set_pal_icon_sprites();
+
+    _current_tool = 7;
 
     while(1){
 

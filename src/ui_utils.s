@@ -42,6 +42,7 @@
 	.import		__ui_last_child
 	.import		__ui_next_sib
 	.import		__ui_prev_sib
+	.import		__draw_ui_element
 	.export		_update_ui_elements_from_ptr
 
 .segment	"BSS"
@@ -727,7 +728,7 @@ L0013:	ldy     #$07
 
 	jsr     decsp1
 	lda     #$00
-L001A:	sta     (sp)
+L001C:	sta     (sp)
 	cmp     #$1E
 	jcs     L0003
 	lda     (sp)
@@ -782,14 +783,13 @@ L0019:	jsr     pushax
 	lda     (sp),y
 	tay
 	lda     #$F0
-	sta     __ui_palette,y
-	bra     L0015
+	bra     L001A
 L0010:	ldy     #$02
 	lda     (sp),y
 	tay
 	lda     #$E0
-	sta     __ui_palette,y
-	bra     L0015
+L001A:	sta     __ui_palette,y
+	bra     L001E
 L000C:	jsr     ldax0sp
 	sta     ptr1
 	stx     ptr1+1
@@ -800,7 +800,10 @@ L000C:	jsr     ldax0sp
 	tay
 	lda     __ui_var_old_val,y
 	cmp     ptr1
-	jsr     boolne
+	beq     L0015
+L001E:	ldy     #$02
+	lda     (sp),y
+	jsr     __draw_ui_element
 L0015:	lda     #<(__ui_var_old_val)
 	ldx     #>(__ui_var_old_val)
 	ldy     #$02
@@ -819,7 +822,7 @@ L000A:	jsr     incsp2
 L0004:	clc
 	lda     #$01
 	adc     (sp)
-	jmp     L001A
+	jmp     L001C
 L0003:	jmp     incsp1
 
 .endproc

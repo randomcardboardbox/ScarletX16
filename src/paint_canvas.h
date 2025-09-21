@@ -9,8 +9,8 @@
 #define LINE_TOOL 3
 #define EYEDROPPER_TOOL 4
 #define GRADIENT_TOOL 5
-#define SPRAY_TOOL 6
-#define SHAPE_TOOL 7
+#define CIRCLE_TOOL 6
+#define RECT_TOOL 7
 
 #define SPRITE_VRAM_DATA_ADDR 0x08000
 #define DISPLAY_VRAM_ADDR 0x0C000
@@ -50,6 +50,8 @@ extern u16 _sprite_vram_size;
 extern u16 _sprite_size;
 extern u8 _display_row_pow;
 extern u8 _display_has_columns;
+
+extern u8 _square_root(u16 number);
 
 extern void _initialize_bmx_data(void);
 extern void _draw_canvas_to_screen(void);

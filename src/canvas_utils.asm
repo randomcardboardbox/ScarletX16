@@ -16,6 +16,8 @@
 .export __get_history_byte
 .export __get_history_redo_byte
 
+.export __square_root
+
 .export __x_axis
 .export __y_axis
 .export __canvas_scale
@@ -65,6 +67,41 @@ __image_data_size: .byte $00, $00
 __primary_colour: .byte $01
 __secondary_colour: .byte $00
 __current_tool: .byte $00
+
+NUM = ZP_PTR_1
+ROOT = ZP_PTR_2
+REM = ZP_PTR_3
+__square_root:
+    ; http://6502org.wikidot.com/software-math-sqrt
+    sta NUM
+    stx NUM+1
+
+   LDA #0
+   STA ROOT
+   STA REM
+   LDX #8
+@L1: SEC
+   LDA NUM+1
+   SBC #$40
+   TAY
+   LDA REM
+   SBC ROOT
+   BCC @L2
+   STY NUM+1
+   STA REM
+@L2: ROL ROOT
+   ASL NUM
+   ROL NUM+1
+   ROL REM
+   ASL NUM
+   ROL NUM+1
+   ROL REM
+   DEX
+   BNE @L1
+
+    lda ROOT
+    rts 
+   
 
 DATA_ADDR = ZP_PTR_1
 __initialize_bmx_data:

@@ -37,6 +37,7 @@
 	.import		__ui_rend_func_high
 	.import		__ui_first_child
 	.import		__ui_next_sib
+	.import		__draw_ui_element
 	.import		__empty_draw_func
 	.import		__draw_ui_text
 	.import		__draw_ui_box
@@ -73,10 +74,12 @@ _tool_text:
 .segment	"RODATA"
 
 S0004:
+	.byte	$44,$30,$50,$41,$4C,$53,$45,$4C,$2E,$53,$50,$52,$00
+S0005:
 	.byte	$44,$30,$4D,$4F,$55,$53,$45,$2E,$53,$50,$52,$00
 S0003:
 	.byte	$44,$30,$46,$4F,$4E,$54,$2E,$53,$50,$52,$00
-S0005:
+S0006:
 	.byte	$46,$4F,$4E,$54,$2E,$50,$41,$4C,$00
 
 .segment	"BSS"
@@ -175,6 +178,16 @@ _context_container_id:
 	lda     #<(S0004)
 	ldx     #>(S0004)
 	jsr     pushax
+	lda     #$0D
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	ldx     #$65
+	dea
+	jsr     __load_file_into_vram
+	lda     #<(S0005)
+	ldx     #>(S0005)
+	jsr     pushax
 	lda     #$0C
 	jsr     pusha
 	lda     #$01
@@ -182,8 +195,8 @@ _context_container_id:
 	ldx     #$60
 	dea
 	jsr     __load_file_into_vram
-	lda     #<(S0005)
-	ldx     #>(S0005)
+	lda     #<(S0006)
+	ldx     #>(S0006)
 	jsr     pushax
 	lda     #$09
 	jsr     pusha
@@ -325,7 +338,7 @@ _context_container_id:
 	ldy     #$01
 L000E:	sta     (sp),y
 	cmp     #$09
-	bcs     L0004
+	bcs     L000F
 	lda     (sp),y
 	jsr     pusha0
 	lda     __current_tool
@@ -351,7 +364,9 @@ L000D:	sta     __ui_palette,y
 	tya
 	adc     (sp),y
 	bra     L000E
-L0004:	jmp     incsp3
+L000F:	lda     _tool_container_id
+	jsr     __draw_ui_element
+	jmp     incsp3
 
 .endproc
 

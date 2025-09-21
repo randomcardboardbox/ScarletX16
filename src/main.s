@@ -22,6 +22,7 @@
 	.import		_keycode
 	.import		__initialize_mouse
 	.import		__get_mouse_input
+	.import		__draw_ui_element
 	.import		__update_ui_element_position
 	.import		_update_ui_elements_from_ptr
 	.import		__clear_ui_layer
@@ -31,6 +32,7 @@
 	.import		_set_layer_config
 	.import		_initialize_paint_ui
 	.import		_change_tool
+	.import		__current_tool
 	.import		_bmx_vera_bit_depth
 	.import		_bmx_width
 	.import		_bmx_height
@@ -56,7 +58,7 @@
 .segment	"DATA"
 
 _filename:
-	.byte	$46,$52,$55,$49,$54,$2E,$42,$4D,$58,$00
+	.byte	$44,$52,$49,$50,$5A,$45,$52,$4F,$2E,$42,$4D,$58,$00
 _timer:
 	.byte	$00
 
@@ -296,8 +298,12 @@ L000D:	lda     #$0F
 	jsr     __clear_overlay_display
 	lda     #$00
 	jsr     __update_ui_element_position
+	lda     #$00
+	jsr     __draw_ui_element
 	jsr     __draw_canvas_to_screen
 	jsr     _set_pal_icon_sprites
+	lda     #$07
+	sta     __current_tool
 L0002:	jsr     __wait_for_nmi
 	jsr     _overlay_routines
 	jsr     __get_mouse_input

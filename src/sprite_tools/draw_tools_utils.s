@@ -15,6 +15,7 @@
 	.export		_draw_pixel_to_sprite
 	.export		_draw_brush_line
 	.export		_draw_pixel_line
+	.export		_draw_brush_circle
 	.export		_tool_handler
 	.export		_set_pal_icon_sprites
 	.import		__primary_colour
@@ -24,6 +25,7 @@
 	.import		_bmx_height
 	.import		_bmx_no_pals
 	.import		__canvas_pow_scale
+	.import		__square_root
 	.import		__draw_canvas_to_screen
 	.import		__draw_row_to_screen
 	.import		__draw_row_to_sprite
@@ -37,6 +39,8 @@
 	.export		_draw_pixel_line_v
 	.export		_draw_brush_line_h
 	.export		_draw_brush_line_v
+	.export		_draw_brush_horizontal_line
+	.export		_draw_brush_vertical_line
 	.export		_mouse_addrs
 	.export		_was_drawing_last_frame
 	.export		_old_pix_x
@@ -60,6 +64,13 @@
 	.export		_previous_point_x
 	.export		_previous_point_y
 	.export		_line_draw_tool
+	.export		_circle_brush_size
+	.export		_circle_brush_type
+	.export		_draw_circle_from_centre
+	.export		_circle_draw_tool
+	.export		_rect_brush_size
+	.export		_rect_brush_type
+	.export		_rectangle_draw_tool
 	.export		_set_colour
 	.export		_eye_dropper_tool
 	.export		_handle_key_command
@@ -115,6 +126,16 @@ _line_brush_size:
 _line_brush_type:
 	.byte	$01
 _point_selected:
+	.byte	$00
+_circle_brush_size:
+	.byte	$02
+_circle_brush_type:
+	.byte	$00
+_draw_circle_from_centre:
+	.byte	$01
+_rect_brush_size:
+	.byte	$02
+_rect_brush_type:
 	.byte	$00
 
 .segment	"BSS"
@@ -373,6 +394,316 @@ L0006:	ldy     #$06
 .endproc
 
 ; ---------------------------------------------------------------
+; void __near__ draw_brush_circle (unsigned char cx, unsigned char cy, unsigned char radius, unsigned char col, unsigned char brush_size, unsigned char brush_type)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_brush_circle: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	jsr     push0
+	ldy     #$05
+	lda     (sp),y
+	jsr     negax
+	jsr     pushax
+	ldy     #$07
+	ldx     #$00
+	lda     (sp),y
+	jsr     negax
+	jsr     pushax
+	jmp     L0004
+L0002:	jsr     ldax0sp
+	cmp     #$01
+	txa
+	sbc     #$00
+	bvs     L0006
+	eor     #$80
+L0006:	bpl     L0005
+	ldy     #$02
+	ldx     #$00
+	lda     #$01
+	jsr     addeqysp
+	ldy     #$03
+	jsr     ldaxysp
+	clc
+	ldy     #$04
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	bra     L0016
+L0005:	ldy     #$05
+	jsr     ldaxysp
+L0016:	jsr     aslax1
+	ina
+	bne     L0009
+	inx
+L0009:	jsr     addeq0sp
+	ldy     #$0B
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$04
+	lda     (sp),y
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$03
+	lda     (sp),y
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_to_sprite
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	pha
+	lda     #$00
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$03
+	lda     (sp),y
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_to_sprite
+	ldy     #$0B
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$04
+	lda     (sp),y
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$03
+	sbc     (sp),y
+	pha
+	lda     #$00
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_to_sprite
+	ldy     #$0B
+	ldx     #$00
+	lda     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$03
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_to_sprite
+	ldy     #$0B
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$02
+	lda     (sp),y
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$05
+	lda     (sp),y
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_to_sprite
+	ldy     #$0B
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$02
+	lda     (sp),y
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	pha
+	lda     #$00
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_to_sprite
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$02
+	sbc     (sp),y
+	pha
+	lda     #$00
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$05
+	lda     (sp),y
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_to_sprite
+	ldy     #$0B
+	ldx     #$00
+	lda     (sp),y
+	sec
+	ldy     #$02
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0A
+	lda     (sp),y
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_to_sprite
+	ldy     #$04
+	ldx     #$00
+	lda     #$01
+	jsr     addeqysp
+L0004:	ldy     #$07
+	jsr     pushwysp
+	ldy     #$05
+	jsr     ldaxysp
+	jsr     negax
+	jsr     tosicmp
+	jmi     L0002
+	ldy     #$0C
+	jmp     addysp
+
+.endproc
+
+; ---------------------------------------------------------------
 ; void __near__ tool_handler (void)
 ; ---------------------------------------------------------------
 
@@ -439,18 +770,18 @@ L0005:	bcs     L0002
 	jsr     tosadd0ax
 	jsr     pushax
 	lda     #$00
-	bra     L0026
+	bra     L002A
 L0002:	ldx     #$8B
 	lda     #$00
 	jsr     pushax
-L0026:	jsr     __set_sprite_address
+L002A:	jsr     __set_sprite_address
 	lda     (sp)
 	and     #$01
-	bne     L002A
+	bne     L002E
 	lda     (sp)
 	and     #$02
 	jeq     L0009
-L002A:	ldy     #$06
+L002E:	ldy     #$06
 	jsr     ldaxysp
 	cmp     #$60
 	txa
@@ -515,16 +846,16 @@ L000F:	jcs     L000C
 	lda     _old_pix_x
 	iny
 	cmp     (sp),y
-	bne     L002E
+	bne     L0032
 	lda     _old_pix_y
 	dey
 	cmp     (sp),y
-	bne     L002E
+	bne     L0032
 	lda     _old_button
 	cmp     (sp)
-	beq     L001B
-L002E:	lda     __current_tool
-	bne     L002F
+	jeq     L001F
+L0032:	lda     __current_tool
+	bne     L0033
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -534,10 +865,10 @@ L002E:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _draw_pixel_to_sprite
-	bra     L001B
-L002F:	lda     __current_tool
+	jmp     L001F
+L0033:	lda     __current_tool
 	cmp     #$01
-	bne     L0030
+	bne     L0034
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -547,10 +878,10 @@ L002F:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _flood_fill
-	bra     L001B
-L0030:	lda     __current_tool
+	bra     L001F
+L0034:	lda     __current_tool
 	cmp     #$03
-	bne     L0031
+	bne     L0035
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -560,10 +891,10 @@ L0030:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _line_draw_tool
-	bra     L001B
-L0031:	lda     __current_tool
+	bra     L001F
+L0035:	lda     __current_tool
 	cmp     #$04
-	bne     L001B
+	bne     L0036
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -573,45 +904,71 @@ L0031:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _eye_dropper_tool
-L001B:	ldy     #$02
+	bra     L001F
+L0036:	lda     __current_tool
+	cmp     #$07
+	bne     L0037
+	ldy     #$02
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$02
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$02
+	lda     (sp),y
+	jsr     _rectangle_draw_tool
+	bra     L001F
+L0037:	lda     __current_tool
+	cmp     #$06
+	bne     L001F
+	ldy     #$02
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$02
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$02
+	lda     (sp),y
+	jsr     _circle_draw_tool
+L001F:	ldy     #$02
 	lda     (sp),y
 	sta     _old_pix_x
 	dey
 	lda     (sp),y
 	sta     _old_pix_y
-	bra     L0024
+	bra     L0028
 L000C:	lda     _was_drawing_last_frame
-	beq     L0033
+	beq     L0039
 	jsr     _add_new_history_node
-L0033:	stz     _was_drawing_last_frame
+L0039:	stz     _was_drawing_last_frame
 	ldy     #$06
 	jsr     ldaxysp
 	cmp     #$F0
 	txa
 	sbc     #$00
-	bcc     L0024
+	bcc     L0028
 	ldy     #$06
 	lda     (sp),y
 	cmp     #$01
-	bne     L0020
+	bne     L0024
 	dey
 	lda     (sp),y
 	cmp     #$30
-L0020:	bcs     L0024
+L0024:	bcs     L0028
 	ldy     #$04
 	jsr     ldaxysp
 	cmp     #$60
 	txa
 	sbc     #$00
-	bcc     L0024
+	bcc     L0028
 	ldy     #$04
 	lda     (sp),y
 	cmp     #$00
-	bne     L0021
+	bne     L0025
 	dey
 	lda     (sp),y
 	cmp     #$E0
-L0021:	bcs     L0024
+L0025:	bcs     L0028
 	ldy     #$08
 	jsr     pushwysp
 	ldy     #$08
@@ -619,12 +976,12 @@ L0021:	bcs     L0024
 	ldy     #$04
 	lda     (sp),y
 	jsr     _palette_selection_handler
-	bra     L0024
+	bra     L0028
 L0009:	lda     _was_drawing_last_frame
-	beq     L0038
+	beq     L003E
 	jsr     _add_new_history_node
-L0038:	stz     _was_drawing_last_frame
-L0024:	lda     (sp)
+L003E:	stz     _was_drawing_last_frame
+L0028:	lda     (sp)
 	sta     _old_button
 	jmp     incsp7
 
@@ -642,8 +999,9 @@ L0024:	lda     (sp)
 
 	lda     #$05
 	jsr     pusha
-	lda     #$59
-	jsr     pusha0
+	ldx     #$0B
+	lda     #$28
+	jsr     pushax
 	lda     #$00
 	jsr     pusha
 	lda     __primary_colour
@@ -660,8 +1018,9 @@ L0024:	lda     (sp)
 	jsr     __set_sprite_attribute
 	lda     #$06
 	jsr     pusha
-	lda     #$5A
-	jsr     pusha0
+	ldx     #$0B
+	lda     #$29
+	jsr     pushax
 	lda     #$00
 	jsr     pusha
 	lda     __secondary_colour
@@ -1545,6 +1904,97 @@ L000D:	ldy     #$0F
 .endproc
 
 ; ---------------------------------------------------------------
+; void __near__ draw_brush_horizontal_line (unsigned char x, unsigned char y, unsigned char width, unsigned char col, unsigned char brush_size, unsigned char brush_type, unsigned char redraw)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_brush_horizontal_line: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	jsr     decsp1
+	lda     #$00
+L0007:	sta     (sp)
+	ldy     #$05
+	cmp     (sp),y
+	bcs     L0003
+	lda     (sp)
+	clc
+	ldy     #$07
+	adc     (sp),y
+	jsr     pusha
+	ldy     #$07
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	jsr     _draw_brush_to_sprite
+	clc
+	lda     #$01
+	adc     (sp)
+	bra     L0007
+L0003:	jmp     incsp8
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ draw_brush_vertical_line (unsigned char x, unsigned char y, unsigned char height, unsigned char col, unsigned char brush_size, unsigned char brush_type, unsigned char redraw)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_brush_vertical_line: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	jsr     decsp1
+	lda     #$00
+L0007:	sta     (sp)
+	ldy     #$05
+	cmp     (sp),y
+	bcs     L0003
+	ldy     #$07
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	clc
+	ldy     #$07
+	adc     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	jsr     _draw_brush_to_sprite
+	clc
+	lda     #$01
+	adc     (sp)
+	bra     L0007
+L0003:	jmp     incsp8
+
+.endproc
+
+; ---------------------------------------------------------------
 ; void __near__ flood_fill_pixel (void)
 ; ---------------------------------------------------------------
 
@@ -1817,6 +2267,336 @@ L0008:	stz     _point_selected
 .endproc
 
 ; ---------------------------------------------------------------
+; void __near__ circle_draw_tool (unsigned char pix_x, unsigned char pix_y, unsigned char mouse_buttons)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_circle_draw_tool: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	lda     _point_selected
+	bne     L0002
+	ina
+	sta     _point_selected
+	ldy     #$02
+	lda     (sp),y
+	sta     _previous_point_x
+	dey
+	lda     (sp),y
+	sta     _previous_point_y
+	jmp     incsp3
+L0002:	ldy     #$0A
+	jsr     subysp
+	stz     _point_selected
+	ldy     #$0A
+	lda     (sp),y
+	and     #$01
+	beq     L0016
+	lda     __primary_colour
+	bra     L001A
+L0016:	lda     __secondary_colour
+L001A:	ldy     #$02
+	sta     (sp),y
+	ldy     #$0C
+	lda     (sp),y
+	cmp     _previous_point_x
+	bcc     L0017
+	beq     L0017
+	sec
+	sbc     _previous_point_x
+	ldx     #$00
+	bcs     L000C
+	dex
+L000C:	ldy     #$08
+	jsr     staxysp
+	lda     _previous_point_x
+	bra     L001B
+L0017:	lda     _previous_point_x
+	sec
+	sbc     (sp),y
+	ldx     #$00
+	bcs     L000D
+	dex
+L000D:	ldy     #$08
+	jsr     staxysp
+	ldy     #$0C
+	lda     (sp),y
+L001B:	ldy     #$01
+	sta     (sp),y
+	ldy     #$0B
+	lda     (sp),y
+	cmp     _previous_point_y
+	bcc     L0018
+	beq     L0018
+	sec
+	sbc     _previous_point_y
+	ldx     #$00
+	bcs     L000E
+	dex
+L000E:	ldy     #$06
+	jsr     staxysp
+	lda     _previous_point_y
+	bra     L001C
+L0018:	lda     _previous_point_y
+	sec
+	sbc     (sp),y
+	ldx     #$00
+	bcs     L000F
+	dex
+L000F:	ldy     #$06
+	jsr     staxysp
+	ldy     #$0B
+	lda     (sp),y
+L001C:	sta     (sp)
+	ldy     #$0B
+	jsr     pushwysp
+	ldy     #$0B
+	jsr     ldaxysp
+	jsr     tosumulax
+	jsr     pushax
+	ldy     #$0B
+	jsr     pushwysp
+	ldy     #$0B
+	jsr     ldaxysp
+	jsr     tosumulax
+	jsr     tosaddax
+	ldy     #$04
+	jsr     staxysp
+	jsr     __square_root
+	ldy     #$03
+	sta     (sp),y
+	lda     _draw_circle_from_centre
+	beq     L0019
+	lda     _previous_point_x
+	jsr     pusha
+	lda     _previous_point_y
+	bra     L0026
+L0019:	lda     (sp),y
+	lsr     a
+	sta     (sp),y
+	ldy     #$01
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$09
+	jsr     ldaxysp
+	jsr     shrax1
+	clc
+	adc     ptr1
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$08
+	jsr     ldaxysp
+	jsr     shrax1
+	clc
+	adc     ptr1
+L0026:	jsr     pusha
+	ldy     #$05
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$05
+	lda     (sp),y
+	jsr     pusha
+	lda     _circle_brush_size
+	jsr     pusha
+	lda     _circle_brush_type
+	jsr     _draw_brush_circle
+	ldy     #$0A
+	jsr     addysp
+	jmp     incsp3
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ rectangle_draw_tool (unsigned char pix_x, unsigned char pix_y, unsigned char mouse_buttons)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_rectangle_draw_tool: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	lda     _point_selected
+	bne     L0002
+	ina
+	sta     _point_selected
+	ldy     #$02
+	lda     (sp),y
+	sta     _previous_point_x
+	dey
+	lda     (sp),y
+	sta     _previous_point_y
+	jmp     incsp3
+L0002:	jsr     decsp1
+	ldy     #$01
+	lda     (sp),y
+	and     #$01
+	beq     L001D
+	lda     __primary_colour
+	bra     L0021
+L001D:	lda     __secondary_colour
+L0021:	sta     (sp)
+	stz     _point_selected
+	lda     _previous_point_x
+	ldy     #$03
+	cmp     (sp),y
+	bcs     L001F
+	lda     _previous_point_x
+	jsr     pusha
+	lda     _previous_point_y
+	jsr     pusha
+	ldy     #$05
+	lda     (sp),y
+	sec
+	sbc     _previous_point_x
+	ina
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _rect_brush_size
+	jsr     pusha
+	lda     _rect_brush_type
+	jsr     pusha
+	lda     #$00
+	jsr     _draw_brush_horizontal_line
+	lda     _previous_point_x
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$05
+	lda     (sp),y
+	sec
+	sbc     _previous_point_x
+	bra     L0034
+L001F:	lda     (sp),y
+	jsr     pusha
+	lda     _previous_point_y
+	jsr     pusha
+	lda     _previous_point_x
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	ina
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _rect_brush_size
+	jsr     pusha
+	lda     _rect_brush_type
+	jsr     pusha
+	lda     #$00
+	jsr     _draw_brush_horizontal_line
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _previous_point_x
+	sec
+	ldy     #$05
+	sbc     (sp),y
+L0034:	ina
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _rect_brush_size
+	jsr     pusha
+	lda     _rect_brush_type
+	jsr     pusha
+	lda     #$00
+	jsr     _draw_brush_horizontal_line
+	lda     _previous_point_y
+	ldy     #$02
+	cmp     (sp),y
+	bcs     L0020
+	lda     _previous_point_x
+	jsr     pusha
+	lda     _previous_point_y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	sec
+	sbc     _previous_point_y
+	ina
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _rect_brush_size
+	jsr     pusha
+	lda     _rect_brush_type
+	jsr     pusha
+	lda     #$00
+	jsr     _draw_brush_vertical_line
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _previous_point_y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	sec
+	sbc     _previous_point_y
+	bra     L0035
+L0020:	lda     _previous_point_x
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _previous_point_y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	ina
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _rect_brush_size
+	jsr     pusha
+	lda     _rect_brush_type
+	jsr     pusha
+	lda     #$00
+	jsr     _draw_brush_vertical_line
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _previous_point_y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+L0035:	ina
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	jsr     pusha
+	lda     _rect_brush_size
+	jsr     pusha
+	lda     _rect_brush_type
+	jsr     pusha
+	lda     #$01
+	jsr     _draw_brush_vertical_line
+	jsr     _add_new_history_node
+	jsr     incsp1
+	jmp     incsp3
+
+.endproc
+
+; ---------------------------------------------------------------
 ; void __near__ set_colour (unsigned char *addr, unsigned char new_col)
 ; ---------------------------------------------------------------
 
@@ -1888,49 +2668,57 @@ L0007:	jsr     pushax
 	beq     L0002
 	lda     __current_tool
 	cmp     #$03
-	bne     L0011
+	bne     L0014
 	lda     _keycode
 	cmp     #$1B
-	bne     L0015
+	bne     L0019
 	stz     _point_selected
-	bra     L0015
-L0011:	lda     __current_tool
+	bra     L0019
+L0014:	lda     __current_tool
+	cmp     #$07
 	bne     L0015
 	lda     _keycode
+	cmp     #$1B
+	bne     L0019
+	stz     _point_selected
+	bra     L0019
+L0015:	lda     __current_tool
+	bne     L0019
+	lda     _keycode
 	cmp     #$3D
-	bne     L0012
+	bne     L0016
 	lda     #$02
 	clc
 	adc     _brush_size
 	sta     _brush_size
 	cmp     #$21
-	bcc     L0015
+	bcc     L0019
 	lda     #$20
 	sta     _brush_size
-	bra     L0015
-L0012:	lda     _keycode
+	bra     L0019
+L0016:	lda     _keycode
 	cmp     #$2D
-	bne     L0013
+	bne     L0017
 	lda     _brush_size
 	sec
 	sbc     #$02
 	sta     _brush_size
 	cmp     #$02
-	bcs     L0015
+	bcs     L0019
 	lda     #$02
 	sta     _brush_size
-	bra     L0015
-L0013:	lda     _keycode
+	bra     L0019
+L0017:	lda     _keycode
 	cmp     #$51
-	bne     L0014
+	bne     L0018
 	lda     #$00
-	bra     L0010
-L0014:	lda     _keycode
+	bra     L0013
+L0018:	lda     _keycode
 	cmp     #$57
-	bne     L0015
+	bne     L0019
 	lda     #$01
-L0010:	sta     _brush_type
-L0015:	lda     _keycode
+L0013:	sta     _brush_type
+L0019:	lda     _keycode
 	sta     $0060
 L0002:	rts
 
