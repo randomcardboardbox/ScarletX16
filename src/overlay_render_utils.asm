@@ -336,20 +336,19 @@ __draw_overlay_h_line:
         stz TEMP_MASK
 
         lda X_POS
-        and #(%00000111)
+        bit #(%00000100)
+        bpl @
+        
+        and #(%00000011)
         sta X_TEMP
 
-        ldx #0
+        tax
         @mask_creation_loop1:
-        cpx X_TEMP
+        cpx #0
         beq @end_mask_loop1
-
-            lsr TEMP_MASK+1
-            ror TEMP_MASK
-            lsr TEMP_MASK+1
-            ror TEMP_MASK
-        
-        inx
+            lsr TEMP_MASK
+            lsr TEMP_MASK
+        dex
         jmp @mask_creation_loop1
         @end_mask_loop1:
 
@@ -368,14 +367,9 @@ __draw_overlay_h_line:
             lda COLOUR_MASK
             ora TEMP_MASK
             sta COLOUR_MASK
-            lda COLOUR_MASK+1
-            ora TEMP_MASK+1
-            sta COLOUR_MASK+1
 
-            lsr TEMP_MASK+1
-            ror TEMP_MASK
-            lsr TEMP_MASK+1
-            ror TEMP_MASK
+            lsr TEMP_MASK
+            lsr TEMP_MASK
 
         dex
         bne @mask_creation_loop2
@@ -383,8 +377,7 @@ __draw_overlay_h_line:
 
         lda COLOUR_MASK
         sta VERA_data1
-        lda COLOUR_MASK+1
-        sta VERA_data0
+        ldx VERA_data0
 
         @skip_first_line:
 
