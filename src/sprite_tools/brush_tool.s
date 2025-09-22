@@ -18,6 +18,7 @@
 	.import		__draw_row_to_screen
 	.import		__draw_row_to_sprite
 	.import		__draw_column_to_sprite
+	.import		_add_history_node_row
 	.export		_row_widths
 	.export		_brush_ptrs
 
@@ -204,10 +205,10 @@ _brush_ptrs:
 	jsr     decsp3
 	lda     #$00
 	ldy     #$01
-L0017:	sta     (sp),y
+L001A:	sta     (sp),y
 	ldy     #$04
 	cmp     (sp),y
-	bcs     L0005
+	jcs     L0005
 	dey
 	lda     (sp),y
 	tay
@@ -219,6 +220,52 @@ L0017:	sta     (sp),y
 	lda     #$01
 	adc     (sp),y
 	sta     (sp),y
+	dey
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$03
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	clc
+	ldy     #$0B
+	adc     (sp),y
+	sec
+	ldy     #$06
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	jsr     _add_history_node_row
+	ldy     #$02
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$03
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	clc
+	ldy     #$0B
+	adc     (sp),y
+	sec
+	ldy     #$03
+	sbc     (sp),y
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	jsr     _add_history_node_row
 	ldy     #$08
 	lda     (sp),y
 	jsr     pusha
@@ -269,7 +316,7 @@ L0017:	sta     (sp),y
 	clc
 	tya
 	adc     (sp),y
-	bra     L0017
+	jmp     L001A
 L0005:	jsr     incsp5
 	bra     L0009
 L0002:	jsr     decsp1
@@ -279,11 +326,31 @@ L0002:	jsr     decsp1
 	jsr     pusha
 	lda     #$00
 	ldy     #$01
-L0018:	sta     (sp),y
+L001B:	sta     (sp),y
 	ldy     #$04
 	cmp     (sp),y
 	bcs     L000B
-	iny
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$08
+	lda     (sp),y
+	sec
+	ldy     #$01
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	clc
+	ldy     #$08
+	adc     (sp),y
+	sec
+	ldy     #$02
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$08
+	lda     (sp),y
+	jsr     _add_history_node_row
+	ldy     #$05
 	lda     (sp),y
 	jsr     pusha
 	ldy     #$05
@@ -308,7 +375,7 @@ L0018:	sta     (sp),y
 	clc
 	tya
 	adc     (sp),y
-	bra     L0018
+	bra     L001B
 L000B:	jsr     incsp2
 L0009:	lda     (sp)
 	beq     L000E
@@ -319,7 +386,7 @@ L0009:	lda     (sp)
 	jsr     pusha
 	lda     #$00
 	ldy     #$01
-L0019:	sta     (sp),y
+L001C:	sta     (sp),y
 	ldy     #$04
 	cmp     (sp),y
 	bcs     L0010
@@ -335,7 +402,7 @@ L0019:	sta     (sp),y
 	clc
 	tya
 	adc     (sp),y
-	bra     L0019
+	bra     L001C
 L0010:	jsr     incsp2
 L000E:	jmp     incsp6
 

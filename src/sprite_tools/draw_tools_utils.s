@@ -1026,7 +1026,7 @@ L0028:	lda     (sp)
 	lda     __secondary_colour
 	jsr     _get_pal_spr_pos_x
 	clc
-	adc     $005A
+	adc     $005B
 	bcc     L0002
 	inx
 L0002:	jsr     decax8
@@ -1034,7 +1034,7 @@ L0002:	jsr     decax8
 	lda     __secondary_colour
 	jsr     _get_pal_spr_pos_y
 	clc
-	adc     $005B
+	adc     $005C
 	bcc     L0003
 	inx
 L0003:	jsr     decax8
@@ -2405,6 +2405,7 @@ L0026:	jsr     pusha
 	jsr     pusha
 	lda     _circle_brush_type
 	jsr     _draw_brush_circle
+	jsr     _add_new_history_node
 	ldy     #$0A
 	jsr     addysp
 	jmp     incsp3
@@ -2665,62 +2666,71 @@ L0007:	jsr     pushax
 .segment	"CODE"
 
 	lda     _keycode
-	beq     L0002
-	lda     __current_tool
+	bne     L001E
+	rts
+L001E:	lda     __current_tool
 	cmp     #$03
-	bne     L0014
+	bne     L0017
 	lda     _keycode
 	cmp     #$1B
-	bne     L0019
+	bne     L001D
 	stz     _point_selected
-	bra     L0019
-L0014:	lda     __current_tool
+	bra     L001D
+L0017:	lda     __current_tool
 	cmp     #$07
-	bne     L0015
+	bne     L0018
 	lda     _keycode
 	cmp     #$1B
-	bne     L0019
+	bne     L001D
 	stz     _point_selected
-	bra     L0019
-L0015:	lda     __current_tool
+	bra     L001D
+L0018:	lda     __current_tool
+	cmp     #$06
 	bne     L0019
+	lda     _keycode
+	cmp     #$1B
+	bne     L001D
+	stz     _point_selected
+	bra     L001D
+L0019:	lda     __current_tool
+	bne     L001D
 	lda     _keycode
 	cmp     #$3D
-	bne     L0016
+	bne     L001A
 	lda     #$02
 	clc
 	adc     _brush_size
 	sta     _brush_size
 	cmp     #$21
-	bcc     L0019
+	bcc     L001D
 	lda     #$20
 	sta     _brush_size
-	bra     L0019
-L0016:	lda     _keycode
+	bra     L001D
+L001A:	lda     _keycode
 	cmp     #$2D
-	bne     L0017
+	bne     L001B
 	lda     _brush_size
 	sec
 	sbc     #$02
 	sta     _brush_size
 	cmp     #$02
-	bcs     L0019
+	bcs     L001D
 	lda     #$02
 	sta     _brush_size
-	bra     L0019
-L0017:	lda     _keycode
+	bra     L001D
+L001B:	lda     _keycode
 	cmp     #$51
-	bne     L0018
+	bne     L001C
 	lda     #$00
-	bra     L0013
-L0018:	lda     _keycode
+	bra     L0016
+L001C:	lda     _keycode
 	cmp     #$57
-	bne     L0019
+	bne     L001D
 	lda     #$01
-L0013:	sta     _brush_type
-L0019:	lda     _keycode
+L0016:	sta     _brush_type
+L001D:	lda     _keycode
 	sta     $0060
-L0002:	rts
+	rts
 
 .endproc
 
@@ -2739,10 +2749,10 @@ L0002:	rts
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha0
-	lda     $0059
+	lda     $005A
 	jsr     tosumoda0
 	jsr     pushax
-	lda     $005A
+	lda     $005B
 	jsr     tosmula0
 	jsr     stax0sp
 	ldx     #$00
@@ -2768,10 +2778,10 @@ L0002:	rts
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha0
-	lda     $0059
+	lda     $005A
 	jsr     tosudiva0
 	jsr     pushax
-	lda     $005B
+	lda     $005C
 	jsr     tosmula0
 	jsr     stax0sp
 	ldx     #$00
@@ -2798,7 +2808,7 @@ L0002:	rts
 	ldy     #$F0
 	jsr     decaxy
 	jsr     pushax
-	lda     $005A
+	lda     $005B
 	jsr     tosudiva0
 	jsr     pusha
 	ldy     #$03
@@ -2806,7 +2816,7 @@ L0002:	rts
 	ldy     #$60
 	jsr     decaxy
 	jsr     pushax
-	lda     $005B
+	lda     $005C
 	jsr     tosudiva0
 	jsr     pusha
 	ldy     #$01
@@ -2815,7 +2825,7 @@ L0002:	rts
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha0
-	lda     $0059
+	lda     $005A
 	jsr     tosumula0
 	jsr     tosaddax
 	jsr     pusha

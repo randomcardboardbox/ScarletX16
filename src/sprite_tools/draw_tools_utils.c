@@ -441,6 +441,7 @@ void circle_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
             distance = distance >> 1;
             draw_brush_circle(x0+(width>>1), y0+(height>>1), distance, col, circle_brush_size, circle_brush_type);
         }
+        add_new_history_node();
     }
 }
 
@@ -496,6 +497,9 @@ void handle_key_command(){
             if(keycode == 27) point_selected = 0;
         }
         else if(_current_tool == RECT_TOOL){
+            if(keycode == 27) point_selected = 0;
+        }
+        else if(_current_tool == CIRCLE_TOOL){
             if(keycode == 27) point_selected = 0;
         }
         else if(_current_tool == DRAW_TOOL) {

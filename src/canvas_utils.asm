@@ -12,6 +12,7 @@
 .export __draw_column_to_sprite
 .export __get_pixel
 
+.export __write_history_byte
 .export __add_history_node_position
 .export __get_history_byte
 .export __get_history_redo_byte
@@ -36,7 +37,6 @@
 .export __current_tool
 
 .export __history_stack_addr
-.export __history_stack_bank
 
 _bmx_header = GOLD_RAM
 _bmx_bit_depth = GOLD_RAM+4
@@ -721,18 +721,58 @@ __draw_row_to_screen:
     rts
 
 .macro inc_stack
-        lda __history_stack_addr
-        clc
-        adc #1
-        sta __history_stack_addr
-        lda __history_stack_addr+1
-        adc #0
+    lda __history_stack_addr
+    clc
+    adc #1
+    sta __history_stack_addr
+    lda __history_stack_addr+1
+    adc #0
+    sta __history_stack_addr+1
+    
+    cmp #($C0)
+    bne :+
+        stz __history_stack_addr
+        lda #($A0)
         sta __history_stack_addr+1
+
+        inc __history_stack_addr+2
+    :
 .endmacro
+
+.macro dec_stack
+    lda __history_stack_addr
+    sec
+    sbc #1
+    sta __history_stack_addr
+    lda __history_stack_addr+1
+    sbc #0
+    sta __history_stack_addr+1
+
+    cmp #($9F)
+    bne :+
+        lda #($FF)
+        sta __history_stack_addr
+        lda #($BF)
+        sta __history_stack_addr+1
+
+        dec __history_stack_addr+2
+    :
+.endmacro
+
+__write_history_byte:
+    pha
+    lda __history_stack_addr+2
+    sta RAM_BANK_SEL
+
+    pla 
+    sta (__history_stack_addr)
+    inc_stack
+
+    rts
 
 __add_history_node_position:
     pha
-    lda __history_stack_bank
+    lda __history_stack_addr+2
     sta RAM_BANK_SEL
     pla
 
@@ -741,10 +781,14 @@ __add_history_node_position:
     sta (__history_stack_addr)
     inc_stack
 
+    lda __history_stack_addr+2
+    sta RAM_BANK_SEL
     pla 
     sta (__history_stack_addr) 
     inc_stack
 
+    lda __history_stack_addr+2
+    sta RAM_BANK_SEL
     dec sp
     lda (sp)
     sta (__history_stack_addr) 
@@ -754,34 +798,22 @@ __add_history_node_position:
     rts
 
 __get_history_byte:
-    lda __history_stack_bank
+    lda __history_stack_addr+2
     sta RAM_BANK_SEL
 
-    lda __history_stack_addr
-    sec
-    sbc #1
-    sta __history_stack_addr
-    lda __history_stack_addr+1
-    sbc #0
-    sta __history_stack_addr+1
+    dec_stack
 
     lda (__history_stack_addr)
     rts
 
 __get_history_redo_byte:
-    lda __history_stack_bank
+    lda __history_stack_addr+2
     sta RAM_BANK_SEL
 
     lda (__history_stack_addr)
     pha
 
-    lda __history_stack_addr
-    clc
-    adc #1
-    sta __history_stack_addr
-    lda __history_stack_addr+1
-    adc #0
-    sta __history_stack_addr+1
+    inc_stack
 
     pla 
     rts

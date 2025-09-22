@@ -15,12 +15,12 @@
 #define SPRITE_VRAM_DATA_ADDR 0x08000
 #define DISPLAY_VRAM_ADDR 0x0C000
 
-#define HIS_STACK_ADDR (*(u16 *)0x56)
+#define HIS_STACK_ADDR (*(u32 *)0x56)
 #define HIS_STACK_BANK (*(u8 *)0x58)
 
-#define PAL_SPR_ROWS (*(u8 *)0x59)
-#define PAL_SPR_WIDTH (*(u8 *)0x5A)
-#define PAL_SPR_HEIGHT (*(u8 *)0x5B)
+#define PAL_SPR_ROWS (*(u8 *)0x5A)
+#define PAL_SPR_WIDTH (*(u8 *)0x5B)
+#define PAL_SPR_HEIGHT (*(u8 *)0x5C)
 
 extern u8 _primary_colour;
 extern u8 _secondary_colour;

@@ -26,8 +26,8 @@ void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u
             width = row_widths[width_index];
             width_index += 1;
 
-            // add_history_node_row((width<<1), x-width, y+i-radius, colour);
-            // add_history_node_row((width<<1), x-width, y+radius-i-1, colour);
+            add_history_node_row((width<<1), x-width, y+i-radius, colour);
+            add_history_node_row((width<<1), x-width, y+radius-i-1, colour);
 
             _draw_row_to_sprite(colour, (width<<1), x-width, y+i-radius);
             _draw_row_to_sprite(colour, (width<<1), x-width, y+radius-i-1);
@@ -37,6 +37,7 @@ void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u
         u8 i;
         u8 radius = brush_size>>1;
         for(i=0; i<brush_size; i++){
+            add_history_node_row(brush_size, x-radius, y+i-radius, colour);
             _draw_row_to_sprite(colour, brush_size, x-radius, y+i-radius);
         }
     }

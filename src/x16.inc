@@ -84,11 +84,11 @@ ZP_PTR_10          = $52
 ZP_PTR_11          = $54
 
 __history_stack_addr = $56
-__history_stack_bank = $58
 
-__pal_spr_rows = $59
-__pal_spr_width = $5A
-__pal_spr_height = $5B
+
+__pal_spr_rows = $5A
+__pal_spr_width = $5B
+__pal_spr_height = $5C
 
 ZP_MOUSE          = $62
 

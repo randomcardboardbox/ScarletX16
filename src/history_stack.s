@@ -10,6 +10,7 @@
 	.importzp	sp, sreg, regsave, regbank
 	.importzp	tmp1, tmp2, tmp3, tmp4, ptr1, ptr2, ptr3, ptr4
 	.macpack	longbranch
+	.import		__write_history_byte
 	.import		__add_history_node_position
 	.import		__get_history_byte
 	.import		__get_history_redo_byte
@@ -22,7 +23,8 @@
 	.import		_bmx_height
 	.import		__draw_canvas_to_screen
 	.import		__draw_row_to_sprite
-	.export		_node_start_pos
+	.export		_node_start_pos1
+	.export		_node_start_pos2
 	.export		_starting_new_node
 	.export		_last_x
 	.export		_last_y
@@ -32,6 +34,10 @@
 
 .segment	"DATA"
 
+_node_start_pos1:
+	.dword	$00000000
+_node_start_pos2:
+	.dword	$00000000
 _starting_new_node:
 	.byte	$01
 _last_x:
@@ -43,8 +49,6 @@ _length_counter:
 
 .segment	"BSS"
 
-_node_start_pos:
-	.res	2,$00
 _curr_col:
 	.res	1,$00
 
@@ -66,7 +70,7 @@ _curr_col:
 	ldx     _bmx_width+1
 	jsr     ldaxi
 	jsr     tosicmp
-	bcs     L0006
+	jcs     L0006
 	ldy     #$01
 	lda     (sp),y
 	jsr     pusha0
@@ -78,12 +82,12 @@ _curr_col:
 	lda     _last_x
 	ldy     #$02
 	cmp     (sp),y
-	bne     L000C
+	bne     L000B
 	lda     _last_y
 	dey
 	cmp     (sp),y
 	beq     L0006
-L000C:	lda     _length_counter
+L000B:	lda     _length_counter
 	cmp     #$FF
 	bne     L0009
 	jsr     _add_new_history_node
@@ -91,18 +95,28 @@ L0009:	lda     _starting_new_node
 	beq     L000A
 	lda     (sp)
 	sta     _curr_col
-	lda     $0056+1
-	sta     _node_start_pos+1
+	lda     $0056+3
+	sta     _node_start_pos1+3
+	lda     $0056+2
+	sta     _node_start_pos1+2
+	ldx     $0056+1
 	lda     $0056
-	sta     _node_start_pos
+	sta     _node_start_pos1
+	stx     _node_start_pos1+1
+	lda     #$00
 	stz     _starting_new_node
-	lda     #$02
-	clc
-	adc     $0056
-	sta     $0056
-	bcc     L000B
-	inc     $0056+1
-L000B:	stz     _length_counter
+	jsr     __write_history_byte
+	lda     $0056+3
+	sta     _node_start_pos2+3
+	lda     $0056+2
+	sta     _node_start_pos2+2
+	ldx     $0056+1
+	lda     $0056
+	sta     _node_start_pos2
+	stx     _node_start_pos2+1
+	lda     #$00
+	jsr     __write_history_byte
+	stz     _length_counter
 L000A:	ldy     #$02
 	lda     (sp),y
 	sta     _last_x
@@ -166,33 +180,30 @@ L0003:	jmp     incsp5
 
 .segment	"CODE"
 
-	lda     $0056
-	ldx     $0056+1
-	jsr     pushax
+	jsr     decsp2
+	lda     _length_counter
+	jsr     __write_history_byte
+	lda     _node_start_pos1
+	ldx     _node_start_pos1+1
+	jsr     stax0sp
+	lda     _node_start_pos1+2
+	sta     $0000
 	jsr     ldax0sp
 	sta     ptr1
 	stx     ptr1+1
 	lda     _length_counter
 	sta     (ptr1)
-	lda     _node_start_pos
-	ldx     _node_start_pos+1
+	lda     _node_start_pos2
+	ldx     _node_start_pos2+1
 	jsr     stax0sp
-	sta     ptr1
-	stx     ptr1+1
-	lda     _length_counter
-	sta     (ptr1)
-	ldx     #$00
-	lda     #$01
-	jsr     addeq0sp
+	lda     _node_start_pos2+2
+	sta     $0000
 	jsr     ldax0sp
 	sta     ptr1
 	stx     ptr1+1
 	lda     _curr_col
 	sta     (ptr1)
-	inc     $0056
-	bne     L0002
-	inc     $0056+1
-L0002:	stz     _length_counter
+	stz     _length_counter
 	lda     #$01
 	sta     _starting_new_node
 	jmp     incsp2
@@ -209,16 +220,22 @@ L0002:	stz     _length_counter
 
 .segment	"CODE"
 
+	lda     $0056+3
+	sta     sreg+1
+	lda     $0056+2
+	sta     sreg
+	ldx     $0056+1
 	lda     $0056
-	sec
-	sbc     _node_start_pos
-	sta     tmp1
-	lda     $0056+1
-	sbc     _node_start_pos+1
-	ora     tmp1
-	beq     L0008
-	bcs     L0002
-L0008:	jsr     __get_history_redo_byte
+	jsr     pusheax
+	lda     _node_start_pos1+3
+	sta     sreg+1
+	lda     _node_start_pos1+2
+	sta     sreg
+	ldx     _node_start_pos1+1
+	lda     _node_start_pos1
+	jsr     tosuleeax
+	beq     L0002
+	jsr     __get_history_redo_byte
 	jsr     pusha
 	jsr     __get_history_redo_byte
 	jsr     pusha
@@ -267,10 +284,19 @@ L0002:	rts
 
 .segment	"CODE"
 
+	lda     $0056+3
+	sta     sreg+1
+	lda     $0056+2
+	sta     sreg
+	ldx     $0056+1
 	lda     $0056
 	cmp     #$01
-	lda     $0056+1
+	txa
 	sbc     #$A0
+	lda     sreg
+	sbc     #$04
+	lda     sreg+1
+	sbc     #$00
 	bcc     L0002
 	lda     #$00
 	jsr     pusha

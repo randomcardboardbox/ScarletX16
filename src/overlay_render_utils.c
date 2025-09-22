@@ -21,6 +21,10 @@ void draw_overlay_rect(u8 col, u8 x, u8 y, u8 width, u8 height){
     _draw_overlay_v_line(col, x+width, y, height+1);
 }
 
+void draw_overlay_brush(u8 col, u8 x, u8 y, u8 ov_brush_size, u8 ov_brush_type){
+    draw_overlay_rect(col, x, y, ov_brush_size, ov_brush_size);
+}
+
 void draw_overlay_rect_from_points(u8 col, u8 x0, u8 y0, u8 x1, u8 y1){
     if(x0 < x1){
         _draw_overlay_h_line(col, x0, y0, x1-x0);
@@ -40,6 +44,10 @@ void draw_overlay_rect_from_points(u8 col, u8 x0, u8 y0, u8 x1, u8 y1){
     }
 }
 
+void draw_overaly_line(u8 col, u8 x0, u8 y0, u8 x1, u8 y1){
+
+}
+
 void draw_overlay_filled_circle(){
 
 }
@@ -47,9 +55,56 @@ void draw_overlay_filled_circle(){
 u8 overlay_off_x;
 u8 overlay_off_y;
 
+u8 old_was_sel;
+
+u8 line_old_x;
+u8 line_old_y;
+u8 line_size_old;
+u8 line_type_old;
+void line_tool_overlay(u8 just_clear){
+    u8 line_brush_radius = line_brush_size >> 1;
+    u8 x = (_mouse_data[MOUSE_X]>>(4-_canvas_pow_scale));
+    u8 y = (_mouse_data[MOUSE_Y]>>(4-_canvas_pow_scale));
+    x = x << (4-_canvas_pow_scale);
+    y = y << (4-_canvas_pow_scale);
+
+    if(just_clear){
+        draw_overlay_brush(0, 
+            overlay_sprite_offset_x+(previous_point_x<<(4-_canvas_pow_scale))-(line_size_old>>1), 
+            overlay_sprite_offset_y+(previous_point_y<<(4-_canvas_pow_scale))-(line_size_old>>1), 
+            line_size_old, 
+            line_type_old);
+        draw_overlay_brush(0, line_old_x-(line_size_old>>1), line_old_y-(line_size_old>>1), line_size_old, line_type_old);
+    }
+    else if(x != line_old_x || y != line_old_y || point_selected != old_was_sel){
+        draw_overlay_brush(0, 
+            overlay_sprite_offset_x+(previous_point_x<<(4-_canvas_pow_scale))-(line_size_old>>1), 
+            overlay_sprite_offset_y+(previous_point_y<<(4-_canvas_pow_scale))-(line_size_old>>1), 
+            line_size_old, 
+            line_type_old);
+        draw_overlay_brush(0, line_old_x-(line_size_old>>1), line_old_y-(line_size_old>>1), line_size_old, line_type_old);
+
+        if(point_selected){
+            draw_overlay_brush(2, 
+                overlay_sprite_offset_x+(previous_point_x<<(4-_canvas_pow_scale))-line_brush_radius, 
+                overlay_sprite_offset_y+(previous_point_y<<(4-_canvas_pow_scale))-line_brush_radius, 
+                line_brush_size, 
+                line_brush_type);
+        }
+        draw_overlay_brush(2, x-line_brush_radius, y-line_brush_radius, line_brush_size, line_brush_type);
+
+        line_old_x = x;
+        line_old_y = y;
+        line_size_old = line_brush_size;
+        line_type_old = line_brush_type;
+        old_was_sel = point_selected;
+    }
+}
+
 u8 old_x;
 u8 old_y;
 u8 old_size;
+u8 old_brush_type;
 void brush_tool_overlay(u8 just_clear){
     u8 brush_radius = brush_size >> 1;
     u8 x = (_mouse_data[MOUSE_X]>>(4-_canvas_pow_scale))-brush_radius;
@@ -60,34 +115,41 @@ void brush_tool_overlay(u8 just_clear){
     y = y << (4-_canvas_pow_scale);
 
     if(just_clear){
-        draw_overlay_rect(0, old_x, old_y, old_size, old_size);
+        draw_overlay_brush(0, old_x, old_y, old_size, old_brush_type);
     }
     else{
         if(x != old_x || y != old_y || size != old_size){
-            draw_overlay_rect(0, old_x, old_y, old_size, old_size);
+            draw_overlay_brush(0, old_x, old_y, old_size, old_brush_type);
             
             if(!was_drawing_last_frame){
-                draw_overlay_rect(2, x, y, size, size);
+                draw_overlay_brush(2, x, y, size, brush_type);
             }
 
             old_x = x;
             old_y = y;
             old_size = size;
+            old_brush_type = brush_type;
         }
     }
 }
 
 u8 shape_old_x;
 u8 shape_old_y;
-u8 old_was_sel;
 shape_tool_overlay(u8 just_clear){
     u8 brush_radius = brush_size >> 1;
     u8 x = (_mouse_data[MOUSE_X]>>(4-_canvas_pow_scale));
     u8 y = (_mouse_data[MOUSE_Y]>>(4-_canvas_pow_scale));
     x = x << (4-_canvas_pow_scale);
     y = y << (4-_canvas_pow_scale);
-
-    if(x != shape_old_x || y != shape_old_y || point_selected != old_was_sel){
+    
+    if(just_clear){
+        draw_overlay_rect_from_points(0, 
+            overlay_sprite_offset_x+(previous_point_x<<(4-_canvas_pow_scale)), 
+            overlay_sprite_offset_y+(previous_point_y<<(4-_canvas_pow_scale)), 
+            shape_old_x, 
+            shape_old_y);
+    }
+    else if(x != shape_old_x || y != shape_old_y || point_selected != old_was_sel){
         draw_overlay_rect_from_points(0, 
             overlay_sprite_offset_x+(previous_point_x<<(4-_canvas_pow_scale)), 
             overlay_sprite_offset_y+(previous_point_y<<(4-_canvas_pow_scale)), 
@@ -113,10 +175,13 @@ void overlay_routines(){
     if(overlay_old_tool != _current_tool){
         if(overlay_old_tool == DRAW_TOOL) brush_tool_overlay(1);
         else if(overlay_old_tool == RECT_TOOL) shape_tool_overlay(1);
+        else if(overlay_old_tool == LINE_TOOL) line_tool_overlay(1);
 
         overlay_old_tool = _current_tool;
+        old_was_sel = 0;
     }
 
     if(_current_tool == DRAW_TOOL) brush_tool_overlay(0);
     else if(_current_tool == RECT_TOOL) shape_tool_overlay(0);
+    else if(_current_tool == LINE_TOOL) line_tool_overlay(0);
 }

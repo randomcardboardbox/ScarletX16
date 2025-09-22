@@ -51,9 +51,6 @@ void load_bmx_file(){
     _transfer_sprite_to_vram(_image_data_size, vram_addr, 0);
 
     cbm_close(LFN);
-
-    HIS_STACK_ADDR = 0xA000;
-    HIS_STACK_BANK = 4;
 }
 
 void save_bmx_file(){
@@ -99,10 +96,11 @@ int main(){
     _draw_canvas_to_screen();
     set_pal_icon_sprites();
 
+    HIS_STACK_ADDR = (u32)0x0004A000;
+
     _current_tool = 7;
 
     while(1){
-
         _wait_for_nmi();
         overlay_routines();
 

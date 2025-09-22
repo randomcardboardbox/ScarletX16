@@ -240,11 +240,6 @@ L000D:	lda     #$0F
 	jsr     __transfer_sprite_to_vram
 	lda     #$0F
 	jsr     _cbm_close
-	ldx     #$A0
-	stz     $0056
-	stx     $0056+1
-	lda     #$04
-	sta     $0058
 	jmp     incsp3
 
 .endproc
@@ -302,6 +297,12 @@ L000D:	lda     #$0F
 	jsr     __draw_ui_element
 	jsr     __draw_canvas_to_screen
 	jsr     _set_pal_icon_sprites
+	stz     $0056+3
+	lda     #$04
+	sta     $0056+2
+	lda     #$A0
+	sta     $0056+1
+	stz     $0056
 	lda     #$07
 	sta     __current_tool
 L0002:	jsr     __wait_for_nmi
