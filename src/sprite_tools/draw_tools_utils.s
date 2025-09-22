@@ -100,7 +100,7 @@ _old_button:
 _brush_type:
 	.byte	$01
 _brush_size:
-	.byte	$02
+	.byte	$03
 _fill_offset_arr_x:
 	.byte	$01
 	.byte	$ff
@@ -2697,10 +2697,8 @@ L0019:	lda     __current_tool
 	lda     _keycode
 	cmp     #$3D
 	bne     L001A
-	lda     #$02
-	clc
-	adc     _brush_size
-	sta     _brush_size
+	inc     _brush_size
+	lda     _brush_size
 	cmp     #$21
 	bcc     L001D
 	lda     #$20
@@ -2709,13 +2707,9 @@ L0019:	lda     __current_tool
 L001A:	lda     _keycode
 	cmp     #$2D
 	bne     L001B
-	lda     _brush_size
-	sec
-	sbc     #$02
-	sta     _brush_size
-	cmp     #$02
-	bcs     L001D
-	lda     #$02
+	dec     _brush_size
+	bne     L001D
+	lda     #$01
 	sta     _brush_size
 	bra     L001D
 L001B:	lda     _keycode

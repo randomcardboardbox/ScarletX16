@@ -195,141 +195,255 @@ _brush_ptrs:
 	lda     (sp),y
 	jne     L0002
 	iny
+	tax
 	lda     (sp),y
-	lsr     a
+	ina
+	bne     L0003
+	inx
+L0003:	jsr     asrax1
 	jsr     pusha
 	lda     (sp)
 	tay
 	lda     _brush_ptrs,y
 	jsr     pusha
 	jsr     decsp3
+	ldy     #$07
+	lda     (sp),y
+	and     #$01
+	jsr     pusha
 	lda     #$00
-	ldy     #$01
-L001A:	sta     (sp),y
-	ldy     #$04
+	ldy     #$02
+L0024:	sta     (sp),y
+	ldy     #$05
 	cmp     (sp),y
-	jcs     L0005
+	jcs     L0006
 	dey
 	lda     (sp),y
 	tay
 	lda     _row_widths,y
-	ldy     #$02
+	ldy     #$03
 	sta     (sp),y
 	iny
 	clc
 	lda     #$01
 	adc     (sp),y
 	sta     (sp),y
+	lda     (sp)
+	jeq     L000A
 	dey
 	lda     (sp),y
 	asl     a
+	sec
+	sbc     #$01
 	jsr     pusha
-	ldy     #$0B
+	ldy     #$0C
 	lda     (sp),y
 	sec
-	ldy     #$03
+	ldy     #$04
 	sbc     (sp),y
 	jsr     pusha
-	ldy     #$03
+	ldy     #$04
 	lda     (sp),y
 	clc
-	ldy     #$0B
+	ldy     #$0C
 	adc     (sp),y
 	sec
-	ldy     #$06
+	ldy     #$07
 	sbc     (sp),y
 	jsr     pusha
-	ldy     #$0B
+	ldy     #$0C
 	lda     (sp),y
 	jsr     _add_history_node_row
+	ldy     #$03
+	lda     (sp),y
+	asl     a
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$0C
+	lda     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$07
+	lda     (sp),y
+	clc
+	ldy     #$0C
+	adc     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	sec
+	sbc     #$02
+	jsr     pusha
+	ldy     #$0C
+	lda     (sp),y
+	jsr     _add_history_node_row
+	ldy     #$09
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	asl     a
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$0D
+	lda     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$05
+	lda     (sp),y
+	clc
+	ldy     #$0D
+	adc     (sp),y
+	sec
+	ldy     #$08
+	sbc     (sp),y
+	jsr     __draw_row_to_sprite
+	ldy     #$09
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	asl     a
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$0D
+	lda     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$08
+	lda     (sp),y
+	clc
+	ldy     #$0D
+	adc     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	sec
+	sbc     #$02
+	jmp     L0023
+L000A:	dey
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$0C
+	lda     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	clc
+	ldy     #$0C
+	adc     (sp),y
+	sec
+	ldy     #$07
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$0C
+	lda     (sp),y
+	jsr     _add_history_node_row
+	ldy     #$03
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$0C
+	lda     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$07
+	lda     (sp),y
+	clc
+	ldy     #$0C
+	adc     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$0C
+	lda     (sp),y
+	jsr     _add_history_node_row
+	ldy     #$09
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$0D
+	lda     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$05
+	lda     (sp),y
+	clc
+	ldy     #$0D
+	adc     (sp),y
+	sec
+	ldy     #$08
+	sbc     (sp),y
+	jsr     __draw_row_to_sprite
+	ldy     #$09
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$0D
+	lda     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$08
+	lda     (sp),y
+	clc
+	ldy     #$0D
+	adc     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	sec
+	sbc     #$01
+L0023:	jsr     __draw_row_to_sprite
 	ldy     #$02
-	lda     (sp),y
-	asl     a
-	jsr     pusha
-	ldy     #$0B
-	lda     (sp),y
-	sec
-	ldy     #$03
-	sbc     (sp),y
-	jsr     pusha
-	ldy     #$06
-	lda     (sp),y
 	clc
-	ldy     #$0B
+	lda     #$01
 	adc     (sp),y
-	sec
-	ldy     #$03
-	sbc     (sp),y
-	sec
-	sbc     #$01
-	jsr     pusha
-	ldy     #$0B
-	lda     (sp),y
-	jsr     _add_history_node_row
-	ldy     #$08
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	asl     a
-	jsr     pusha
-	ldy     #$0C
-	lda     (sp),y
-	sec
-	ldy     #$04
-	sbc     (sp),y
-	jsr     pusha
-	ldy     #$04
-	lda     (sp),y
-	clc
-	ldy     #$0C
-	adc     (sp),y
-	sec
-	ldy     #$07
-	sbc     (sp),y
-	jsr     __draw_row_to_sprite
-	ldy     #$08
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	asl     a
-	jsr     pusha
-	ldy     #$0C
-	lda     (sp),y
-	sec
-	ldy     #$04
-	sbc     (sp),y
-	jsr     pusha
-	ldy     #$07
-	lda     (sp),y
-	clc
-	ldy     #$0C
-	adc     (sp),y
-	sec
-	ldy     #$04
-	sbc     (sp),y
-	sec
-	sbc     #$01
-	jsr     __draw_row_to_sprite
-	ldy     #$01
-	clc
-	tya
-	adc     (sp),y
-	jmp     L001A
-L0005:	jsr     incsp5
-	bra     L0009
+	jmp     L0024
+L0006:	jsr     incsp6
+	jmp     L000C
 L0002:	jsr     decsp1
 	ldy     #$03
+	ldx     #$00
 	lda     (sp),y
-	lsr     a
+	ina
+	bne     L000D
+	inx
+L000D:	jsr     asrax1
 	jsr     pusha
 	lda     #$00
 	ldy     #$01
-L001B:	sta     (sp),y
+L0025:	sta     (sp),y
 	ldy     #$04
 	cmp     (sp),y
-	bcs     L000B
+	bcs     L000F
 	lda     (sp),y
 	jsr     pusha
 	ldy     #$08
@@ -375,21 +489,25 @@ L001B:	sta     (sp),y
 	clc
 	tya
 	adc     (sp),y
-	bra     L001B
-L000B:	jsr     incsp2
-L0009:	lda     (sp)
-	beq     L000E
+	bra     L0025
+L000F:	jsr     incsp2
+L000C:	lda     (sp)
+	beq     L0012
 	jsr     decsp1
 	ldy     #$03
+	ldx     #$00
 	lda     (sp),y
-	lsr     a
+	ina
+	bne     L0013
+	inx
+L0013:	jsr     asrax1
 	jsr     pusha
 	lda     #$00
 	ldy     #$01
-L001C:	sta     (sp),y
+L0026:	sta     (sp),y
 	ldy     #$04
 	cmp     (sp),y
-	bcs     L0010
+	bcs     L0015
 	ldy     #$01
 	lda     (sp),y
 	clc
@@ -402,9 +520,9 @@ L001C:	sta     (sp),y
 	clc
 	tya
 	adc     (sp),y
-	bra     L001C
-L0010:	jsr     incsp2
-L000E:	jmp     incsp6
+	bra     L0026
+L0015:	jsr     incsp2
+L0012:	jmp     incsp6
 
 .endproc
 

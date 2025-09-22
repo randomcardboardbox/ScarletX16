@@ -297,7 +297,7 @@ u8 old_pix_y = 0;
 u8 old_button = 0;
 
 u8 brush_type = 1;
-u8 brush_size = 2;
+u8 brush_size = 3;
 void draw_pixel_to_sprite(u8 pix_x, u8 pix_y, u8 mouse_buttons){
     u8 col;
 
@@ -504,12 +504,12 @@ void handle_key_command(){
         }
         else if(_current_tool == DRAW_TOOL) {
             if(keycode == 61){ 
-                brush_size += 2;
+                brush_size += 1;
                 if(brush_size > 32) brush_size = 32;
             }
             else if(keycode == 45) {
-                brush_size -= 2;
-                if(brush_size < 2) brush_size = 2;
+                brush_size -= 1;
+                if(brush_size < 1) brush_size = 1;
             }
             else if(keycode == 81){
                 brush_type = 0;
