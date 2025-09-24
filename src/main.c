@@ -98,7 +98,7 @@ int main(){
 
     HIS_STACK_ADDR = (u32)0x0004A000;
 
-    _current_tool = 7;
+    _current_tool = 0;
 
     while(1){
         _wait_for_nmi();

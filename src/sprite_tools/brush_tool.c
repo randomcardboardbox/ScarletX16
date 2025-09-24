@@ -19,47 +19,125 @@ void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u
     if(brush_type == 0){ //round brush
         u8 radius = (brush_size+1)>>1;
         u8 width_index = brush_ptrs[radius];
-        u8 width;
-        u8 i;
-        u8 j;
+        i16 width;
+        i16 i;
         u8 odd_brush_size = brush_size&(0b00000001);
-        for(i=0; i<radius; i++){
-            width = row_widths[width_index];
-            width_index += 1;
-            
-            if(odd_brush_size){
-                add_history_node_row((width<<1)-1, x-width, y+i-radius, colour);
-                add_history_node_row((width<<1)-1, x-width, y+radius-i-2, colour);
 
-                _draw_row_to_sprite(colour, (width<<1)-1, x-width, y+i-radius);
-                _draw_row_to_sprite(colour, (width<<1)-1, x-width, y+radius-i-2);
+        if(odd_brush_size){
+            i16 start_y1 = (i16)y-(i16)radius;
+            i16 start_y2 = (i16)y+(i16)radius-2;
+            i16 start_x;
+            u8 row_width;
+
+            for(i=0; i<radius; i++){
+                width = row_widths[width_index];
+                width_index += 1;
+                start_x = x-width;
+                row_width = (width<<1)-1;
                 
-            }
-            else{
-                add_history_node_row((width<<1), x-width, y+i-radius, colour);
-                add_history_node_row((width<<1), x-width, y+radius-i-1, colour);
+                if(start_x < 0){
+                    start_x = 0;
+                    row_width -= width-x;
+                }
+                if(start_x+row_width >= (i16)(*bmx_height)){
+                    row_width -= (start_x+row_width) - (i16)(*bmx_height);
+                    if(row_width <= 0) continue;
+                }
+                // add_history_node_row((width<<1)-1, x-width, y+i-radius, colour);
+                // add_history_node_row((width<<1)-1, x-width, y+radius-i-2, colour);
 
-                _draw_row_to_sprite(colour, (width<<1), x-width, y+i-radius);
-                _draw_row_to_sprite(colour, (width<<1), x-width, y+radius-i-1);
+                if(start_y1+i > 0 && start_y1+i < (*bmx_height)) _draw_row_to_sprite(colour, row_width, start_x, start_y1+i);
+                if(start_y1+i > 0 && start_y1+i < (*bmx_height)) _draw_row_to_sprite(colour, row_width, start_x, start_y2-i);
+            }
+        }
+        else{
+            i16 start_y1 = (i16)y-(i16)radius;
+            i16 start_y2 = (i16)y+(i16)radius-1;
+            i16 start_x;
+            i16 row_width;
+
+            for(i=0; i<radius; i++){
+                width = row_widths[width_index];
+                width_index += 1;
+                start_x = x-width;
+                row_width = (width<<1);
+
+                if(start_x < 0){
+                    start_x = 0;
+                    row_width -= width-x;
+                }
+                if(start_x+row_width >= (i16)(*bmx_height)){
+                    row_width -= (start_x+row_width) - (i16)(*bmx_height);
+                    if(row_width <= 0) continue;
+                }
+                // add_history_node_row((width<<1), x-width, y+i-radius, colour);
+                // add_history_node_row((width<<1), x-width, y+radius-i-1, colour);
+
+                if(start_y1+i >= 0 && start_y1+i < (*bmx_height)) {
+                    _draw_row_to_sprite(colour, row_width, start_x, start_y1+i);
+                    if(redraw_screen) _draw_row_to_screen(start_y1+i);
+                }
+                if(start_y2-i >= 0 && start_y2-i < (*bmx_height)) {
+                    _draw_row_to_sprite(colour, row_width, start_x, start_y2-i);
+                    if(redraw_screen) _draw_row_to_screen(start_y2-i);
+                }
             }
         }
     }
     else{ //square brush
-        u8 i;
+        i16 i;
         u8 radius = (brush_size+1)>>1;
+        i16 start_x = x-radius;
+        i16 start_y = (i16)y-(i16)radius;
+        u8 width = brush_size;
+
+        if(x < radius){
+            start_x = 0;
+            width -= radius - x;
+        }
+        else if(start_x+brush_size > (*bmx_width)){
+            width -= (start_x+brush_size) - (*bmx_width);
+        }
+
         for(i=0; i<brush_size; i++){
-            add_history_node_row(brush_size, x-radius, y+i-radius, colour);
-            _draw_row_to_sprite(colour, brush_size, x-radius, y+i-radius);
+            // add_history_node_row(brush_size, x-radius, y+i-radius, colour);
+            if(start_y+i >= (i16)(*bmx_height)) break;
+            if(start_y+i >= (i16)0){
+                _draw_row_to_sprite(colour, width, start_x, start_y+i);
+                if(redraw_screen) _draw_row_to_screen(start_y+i);
+            }
         }
     }
 
-    if(redraw_screen){
-        u8 i;
-        u8 radius = (brush_size+1)>>1;
-        for(i=0; i<brush_size; i++){
-            _draw_row_to_screen(y+i-radius);
-        }
-    }
+    // else{ //square brush
+    //     u8 i;
+    //     u8 radius = (brush_size+1)>>1;
+    //     u8 start_x = x-radius;
+    //     u8 start_y = y-radius;
+    //     u8 width = brush_size;
+
+    //     if(x < radius){
+    //         start_x = 0;
+    //         width -= radius - x;
+    //     }
+    //     else if(start_x+brush_size > (*bmx_width)){
+    //         width -= (start_x+brush_size) - (*bmx_width);
+    //     }
+
+    //     for(i=0; i<brush_size; i++){
+    //         // add_history_node_row(brush_size, x-radius, y+i-radius, colour);
+    //         if(redraw_screen) _draw_row_to_screen(start_y+i);
+    //         _draw_row_to_sprite(colour, width, start_x, start_y+i);
+    //     }
+    // }
+
+    // if(redraw_screen){
+    //     u8 i;
+    //     u8 radius = (brush_size+1)>>1;
+    //     for(i=0; i<brush_size; i++){
+    //         _draw_row_to_screen(y+i-radius);
+    //     }
+    // }
 }
 
 void draw_brush_right_hemisphere(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type){

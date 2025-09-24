@@ -303,8 +303,7 @@ L000D:	lda     #$0F
 	lda     #$A0
 	sta     $0056+1
 	stz     $0056
-	lda     #$07
-	sta     __current_tool
+	stz     __current_tool
 L0002:	jsr     __wait_for_nmi
 	jsr     _overlay_routines
 	jsr     __get_mouse_input

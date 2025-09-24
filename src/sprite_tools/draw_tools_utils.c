@@ -263,7 +263,7 @@ void draw_brush_vertical_line(u8 x, u8 y, u8 height, u8 col, u8 brush_size, u8 b
     }
 }
 
-void draw_brush_circle(u8 cx, u8 cy, u8 radius, u8 col, u8 brush_size, u8 brush_type){
+void draw_brush_circle(u8 cx, u8 cy, u8 radius, u8 col, u8 brush_size, u8 brush_type, u8 filled){
     i16 x = 0;
     i16 y = -((i16)radius);
     i16 p = -((i16)radius);
@@ -275,6 +275,21 @@ void draw_brush_circle(u8 cx, u8 cy, u8 radius, u8 col, u8 brush_size, u8 brush_
         }
         else{
             p += 2*x + 1;
+        }
+
+        if(filled){
+            if(x){ 
+                add_history_node_row(x*2, cx-x, cy+y, col);
+                add_history_node_row(x*2, cx-x, cy-y, col);
+                _draw_row_to_sprite(col, x*2, cx-x, cy+y);
+                _draw_row_to_sprite(col, x*2, cx-x, cy-y);
+            }
+            if(y){
+                add_history_node_row((-y)*2, cx+y, cy+x, col);
+                add_history_node_row((-y)*2, cx+y, cy-x, col);
+                _draw_row_to_sprite(col, (-y)*2, cx+y, cy+x);
+                _draw_row_to_sprite(col, (-y)*2, cx+y, cy-x);
+            }
         }
 
         draw_brush_to_sprite(cx+x, cy+y, col, brush_size, brush_type, 1);
@@ -297,7 +312,7 @@ u8 old_pix_y = 0;
 u8 old_button = 0;
 
 u8 brush_type = 1;
-u8 brush_size = 3;
+u8 brush_size = 8;
 void draw_pixel_to_sprite(u8 pix_x, u8 pix_y, u8 mouse_buttons){
     u8 col;
 
@@ -342,30 +357,49 @@ void flood_fill_pixel(){
         }
     }
 }
+
+u8 is_contiguous = 1;
 void flood_fill(u8 pix_x, u8 pix_y, u8 mouse_buttons){
     selection_colour = _get_pixel(pix_x, pix_y);
-    queue_length = 0;
-
     if(mouse_buttons & M_LEFT_BUT) fill_colour = _primary_colour;
     else fill_colour = _secondary_colour;
-    
     if(fill_colour == selection_colour) return;
 
-    flood_fill_queue_x[queue_length] = pix_x;
-    flood_fill_queue_y[queue_length] = pix_y;
-    queue_length += 1;
+    if(is_contiguous){
+        u8 i;
+        u8 j;
 
-    while(queue_length > 0){
-        queue_length -= 1;
-        flood_fill_pixel();
+        for(j=0; j<(*bmx_height); j++){
+            for(i=0; i<(*bmx_width); i++){
+                u8 new_col = _get_pixel(i, j);
+                if(new_col == selection_colour){
+                    _add_history_node_position(i, j);
+                    _draw_row_to_sprite(fill_colour, 1, i, j);
+                }
+            }
+            _draw_row_to_screen(j);
+        } 
+    }
+    else{
+        queue_length = 0;
 
-        if(abort_flood_fill){
-            abort_flood_fill = 0;
-            break;
+        flood_fill_queue_x[queue_length] = pix_x;
+        flood_fill_queue_y[queue_length] = pix_y;
+        queue_length += 1;
+
+        while(queue_length > 0){
+            queue_length -= 1;
+            flood_fill_pixel();
+
+            if(abort_flood_fill){
+                abort_flood_fill = 0;
+                break;
+            }
         }
+
+        _draw_canvas_to_screen();
     }
     add_new_history_node();
-    _draw_canvas_to_screen();
 }
 
 u8 line_brush_size = 4;
@@ -393,6 +427,7 @@ void line_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
 u8 circle_brush_size = 2;
 u8 circle_brush_type = 0;
 u8 draw_circle_from_centre = 1;
+u8 circle_is_filled = 0;
 void circle_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
     if(point_selected == 0){
         point_selected = 1;
@@ -435,19 +470,32 @@ void circle_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
         distance = _square_root(dis_temp); 
 
         if(draw_circle_from_centre){
-            draw_brush_circle(previous_point_x, previous_point_y, distance, col, circle_brush_size, circle_brush_type);
+            draw_brush_circle(previous_point_x, previous_point_y, distance, col, circle_brush_size, circle_brush_type, circle_is_filled);
         }
         else{
             distance = distance >> 1;
-            draw_brush_circle(x0+(width>>1), y0+(height>>1), distance, col, circle_brush_size, circle_brush_type);
+            draw_brush_circle(x0+(width>>1), y0+(height>>1), distance, col, circle_brush_size, circle_brush_type, circle_is_filled);
         }
         add_new_history_node();
     }
 }
 
+draw_filled_rect(u8 col, u8 x, u8 y, u8 width, u8 height){
+    u8 i = 0;
+    for(i=0; i<height; i++){
+        _draw_row_to_sprite(col, width, x, y+i);
+    }
+}
+
 u8 rect_brush_size = 2;
 u8 rect_brush_type = 0;
+u8 rect_is_filled = 1;
 void rectangle_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
+    u8 start_x;
+    u8 start_y;
+    u8 width;
+    u8 height;
+
     if(point_selected == 0){
         point_selected = 1;
         previous_point_x = pix_x;
@@ -460,22 +508,29 @@ void rectangle_draw_tool(u8 pix_x, u8 pix_y, u8 mouse_buttons){
 
         point_selected = 0;
         if(previous_point_x < pix_x){
-            draw_brush_horizontal_line(previous_point_x, previous_point_y, pix_x-previous_point_x+1, col, rect_brush_size, rect_brush_type, 0);
-            draw_brush_horizontal_line(previous_point_x, pix_y, pix_x-previous_point_x+1, col, rect_brush_size, rect_brush_type, 0);
+            start_x = previous_point_x;
+            width = pix_x-previous_point_x;
         }
         else{
-            draw_brush_horizontal_line(pix_x, previous_point_y, previous_point_x-pix_x+1, col, rect_brush_size, rect_brush_type, 0);
-            draw_brush_horizontal_line(pix_x, pix_y, previous_point_x-pix_x+1, col, rect_brush_size, rect_brush_type, 0);
+            start_x = pix_x;
+            width = previous_point_x-pix_x;
         }
 
         if(previous_point_y < pix_y){
-            draw_brush_vertical_line(previous_point_x, previous_point_y, pix_y-previous_point_y+1, col, rect_brush_size, rect_brush_type, 0);
-            draw_brush_vertical_line(pix_x, previous_point_y, pix_y-previous_point_y+1, col, rect_brush_size, rect_brush_type, 1);
+            start_y = previous_point_y;
+            height = pix_y-previous_point_y;
         }
         else{
-            draw_brush_vertical_line(previous_point_x, pix_y, previous_point_y-pix_y+1, col, rect_brush_size, rect_brush_type, 0);
-            draw_brush_vertical_line(pix_x, pix_y, previous_point_y-pix_y+1, col, rect_brush_size, rect_brush_type, 1);
+            start_y = pix_y;
+            height = previous_point_y-pix_y;
         }
+        
+        if(rect_is_filled) draw_filled_rect(col, start_x, start_y, width, height);
+        draw_brush_horizontal_line(start_x, start_y, width, col, rect_brush_size, rect_brush_type, 0);
+        draw_brush_horizontal_line(start_x, start_y+height, width, col, rect_brush_size, rect_brush_type, 0);
+        draw_brush_vertical_line(start_x, start_y, height, col, rect_brush_size, rect_brush_type, 0);
+        draw_brush_vertical_line(start_x+width, start_y, height+1, col, rect_brush_size, rect_brush_type, 1);
+
         add_new_history_node();
     }
 }

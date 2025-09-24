@@ -586,7 +586,7 @@ __render_palette_sprites:
 ROW_DISPLAY_ADDR = ZP_PTR_1
 ROW_SPRITE_ADDR = ZP_PTR_2
 __draw_row_to_screen:
-    cmp _bmx_width
+    cmp _bmx_height
     bmi @skip_early_exit
     rts
     @skip_early_exit:
