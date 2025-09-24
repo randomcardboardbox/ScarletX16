@@ -1195,17 +1195,17 @@ L0039:	stz     _was_drawing_last_frame
 L0024:	bcs     L0028
 	ldy     #$04
 	jsr     ldaxysp
-	cmp     #$60
+	cmp     #$A0
 	txa
 	sbc     #$00
 	bcc     L0028
 	ldy     #$04
 	lda     (sp),y
-	cmp     #$00
+	cmp     #$01
 	bne     L0025
 	dey
 	lda     (sp),y
-	cmp     #$E0
+	cmp     #$20
 L0025:	bcs     L0028
 	ldy     #$08
 	jsr     pushwysp
@@ -3115,7 +3115,7 @@ L001D:	lda     _keycode
 	jsr     tosmula0
 	jsr     stax0sp
 	ldx     #$00
-	lda     #$60
+	lda     #$A0
 	jsr     addeq0sp
 	jsr     ldax0sp
 	jmp     incsp3
@@ -3143,7 +3143,7 @@ L001D:	lda     _keycode
 	jsr     pusha
 	ldy     #$03
 	jsr     ldaxysp
-	ldy     #$60
+	ldy     #$A0
 	jsr     decaxy
 	jsr     pushax
 	lda     $005C

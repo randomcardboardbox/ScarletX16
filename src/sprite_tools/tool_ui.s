@@ -19,6 +19,7 @@
 	.import		_init_text_element
 	.import		_init_icon_element
 	.import		_init_slider_element
+	.import		_slider_on_mouse_func
 	.import		__draw_ui_element
 	.import		__update_ui_element_position
 	.import		__empty_draw_func
@@ -102,9 +103,9 @@ L0007:	lda     __current_tool
 	lda     #$00
 	jsr     pusha
 	jsr     pusha
-	lda     #$1C
+	lda     #$0A
 	jsr     pusha
-	lda     #$07
+	lda     #$08
 	jsr     pusha
 	lda     #<(__empty_draw_func)
 	ldx     #>(__empty_draw_func)
@@ -116,12 +117,11 @@ L0007:	lda     __current_tool
 	jsr     pusha
 	lda     #$01
 	jsr     pusha
-	lda     #$15
 	jsr     pusha
-	lda     #$01
 	jsr     pusha
 	ina
 	jsr     pusha
+	dea
 	jsr     pusha
 	lda     #<(__draw_ui_text)
 	ldx     #>(__draw_ui_text)
@@ -138,12 +138,12 @@ L0007:	lda     __current_tool
 	jsr     pusha
 	lda     #$01
 	jsr     pusha
-	lda     #$0B
 	jsr     pusha
-	lda     #$01
+	lda     #$05
 	jsr     pusha
-	ina
+	lda     #$02
 	jsr     pusha
+	dea
 	jsr     pusha
 	lda     #<(__draw_ui_text)
 	ldx     #>(__draw_ui_text)
@@ -160,11 +160,10 @@ L0007:	lda     __current_tool
 	jsr     pusha
 	lda     #$06
 	jsr     pusha
-	lda     #$18
-	jsr     pusha
 	lda     #$03
 	jsr     pusha
 	dea
+	jsr     pusha
 	jsr     pusha
 	jsr     pusha
 	lda     #<(__draw_ui_icon)
@@ -187,11 +186,10 @@ L0007:	lda     __current_tool
 	jsr     pusha
 	lda     #$06
 	jsr     pusha
-	lda     #$16
+	lda     #$01
 	jsr     pusha
-	lda     #$03
+	ina
 	jsr     pusha
-	dea
 	jsr     pusha
 	jsr     pusha
 	lda     #<(__draw_ui_icon)
@@ -214,21 +212,25 @@ L0007:	lda     __current_tool
 	jsr     pusha
 	lda     #$07
 	jsr     pusha
-	lda     #$0B
+	lda     #$01
 	jsr     pusha
-	lda     #$03
+	lda     #$06
 	jsr     pusha
-	ina
+	lda     #$08
 	jsr     pusha
 	lda     #$01
 	jsr     pusha
 	lda     #<(__draw_ui_slider)
 	ldx     #>(__draw_ui_slider)
 	jsr     pushax
-	ldx     #$00
-	txa
+	lda     #<(_slider_on_mouse_func)
+	ldx     #>(_slider_on_mouse_func)
 	jsr     _create_ui_element
 	sta     _slider
+	jsr     pusha
+	lda     #$02
+	jsr     pusha
+	dea
 	jsr     pusha
 	lda     #<(_brush_size)
 	ldx     #>(_brush_size)

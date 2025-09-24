@@ -579,16 +579,31 @@ SLIDER_VAL = ZP_PTR_2
 __draw_ui_slider:
     init_draw_ui
 
-    lda __ui_size_x, x
-    tay
-
     lda __ui_var_ptr_low, x
     sta SLIDER_PTR_ADDR
     lda __ui_var_ptr_high, x
     sta SLIDER_PTR_ADDR+1
 
+    lda __ui_var_2, x
+    tay    
+
     lda (SLIDER_PTR_ADDR)
+    @shift_slider_loop:
+    cpy #0
+    beq @end_shift_slider
+    dey 
+        asl
+    jmp @shift_slider_loop
+    @end_shift_slider:
+
+    clc
+    adc __ui_var_1, x
+
     sta SLIDER_VAL
+
+
+    lda __ui_size_x, x
+    tay
 
     @draw_slider_full_col_loop: 
     lda SLIDER_VAL

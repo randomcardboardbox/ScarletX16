@@ -15,6 +15,7 @@
 	.export		_init_text_element
 	.export		_init_icon_element
 	.export		_init_slider_element
+	.export		_slider_on_mouse_func
 	.export		_parse_mouse_input
 	.export		_get_keycode
 	.export		_check_mouse_over_ui
@@ -33,6 +34,7 @@
 	.import		__ui_var_old_val
 	.import		__ui_var_val
 	.import		__ui_var_1
+	.import		__ui_var_2
 	.import		__ui_rend_func_low
 	.import		__ui_rend_func_high
 	.import		__ui_on_mouse
@@ -462,7 +464,7 @@ L0006:	jmp     incsp7
 .endproc
 
 ; ---------------------------------------------------------------
-; void __near__ init_slider_element (unsigned char ui_id, unsigned int variable_addr)
+; void __near__ init_slider_element (unsigned char ui_id, unsigned char offset, unsigned char scale, unsigned int variable_addr)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
@@ -472,24 +474,105 @@ L0006:	jmp     incsp7
 .segment	"CODE"
 
 	jsr     pushax
-	ldy     #$02
+	ldy     #$04
 	lda     (sp),y
 	tax
 	lda     (sp)
 	sta     __ui_var_ptr_low,x
 	lda     #<(__ui_var_ptr_high)
 	ldx     #>(__ui_var_ptr_high)
-	ldy     #$02
+	ldy     #$04
 	clc
 	adc     (sp),y
 	bcc     L0003
 	inx
 L0003:	sta     ptr1
 	stx     ptr1+1
-	dey
+	ldy     #$01
 	lda     (sp),y
 	sta     (ptr1)
-	jmp     incsp3
+	ldy     #$04
+	lda     (sp),y
+	tax
+	dey
+	lda     (sp),y
+	sta     __ui_var_1,x
+	iny
+	lda     (sp),y
+	tax
+	ldy     #$02
+	lda     (sp),y
+	sta     __ui_var_2,x
+	jmp     incsp5
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ slider_on_mouse_func (unsigned char ui_id)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_slider_on_mouse_func: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	lda     (sp)
+	tay
+	lda     __ui_var_ptr_low,y
+	sta     ptr1
+	lda     (sp)
+	tay
+	ldx     __ui_var_ptr_high,y
+	clc
+	lda     ptr1
+	bcc     L0007
+	inx
+L0007:	jsr     pushax
+	ldy     #$02
+	lda     (sp),y
+	tay
+	ldx     #$00
+	lda     __ui_global_pos_x,y
+	jsr     shlax3
+	jsr     pushax
+	lda     __mouse_data
+	sec
+	sbc     (sp)
+	pha
+	lda     __mouse_data+1
+	ldy     #$01
+	sbc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	ldy     #$05
+	jsr     ldaxysp
+	sta     sreg
+	stx     sreg+1
+	ldy     #$06
+	lda     (sp),y
+	tay
+	ldx     #$00
+	lda     __ui_var_1,y
+	clc
+	adc     (sp)
+	sta     ptr1
+	txa
+	ldy     #$01
+	adc     (sp),y
+	sta     ptr1+1
+	ldy     #$06
+	lda     (sp),y
+	tay
+	lda     __ui_var_2,y
+	tay
+	lda     ptr1
+	ldx     ptr1+1
+	jsr     shraxy
+	sta     (sreg)
+	jmp     incsp7
 
 .endproc
 

@@ -118,6 +118,6 @@ extern u16 old_joystick;
 #define JOY_RIGHT       0b0000000000000001
 
 #define PAL_SPR_X 240
-#define PAL_SPR_Y 96
+#define PAL_SPR_Y 160
 
 #endif //X16_UTILS

@@ -464,7 +464,7 @@ __draw_canvas_to_screen:
     rts
 palette_row_no_arr: .byte 16, 8, 8, 4, 4, 2, 2, 2
 palette_width_arr: .byte 4, 8, 8, 16, 16, 32, 32, 32
-palette_height_arr: .byte 8, 8, 16, 16, 32, 32, 64, 64
+palette_height_arr: .byte 4, 4, 8, 8, 16, 16, 32, 32
 NO_OF_COLS = ZP_PTR_4
 ROW_START_ADDR = ZP_PTR_5
 COL_PLACE_ADDR = ZP_PTR_6
@@ -484,7 +484,7 @@ __clear_palette_sprites:
     ldx #64
 
     @row_loop:
-    ldy #128
+    ldy #64
         @column_loop:
             sta VERA_data0
         dey

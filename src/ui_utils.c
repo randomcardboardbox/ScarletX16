@@ -167,7 +167,18 @@ void init_icon_element(u8 ui_id, u8 icon_addr, u16 variable_addr, u8 variable_va
     }
 }
 
-void init_slider_element(u8 ui_id, u16 variable_addr){
+void init_slider_element(u8 ui_id, u8 offset, u8 scale, u16 variable_addr){
     _ui_var_ptr_low[ui_id] = variable_addr;
     _ui_var_ptr_high[ui_id] = variable_addr>>8;
+
+    _ui_var_1[ui_id] = offset;
+    _ui_var_2[ui_id] = scale;
+}
+
+void slider_on_mouse_func(u8 ui_id){
+    u8 *ptr = _ui_var_ptr_low[ui_id] + (_ui_var_ptr_high[ui_id]<<8);
+    u16 ui_element_off = ((u16)_ui_global_pos_x[ui_id])<<3;
+    u16 mouse_x_val = _mouse_data[MOUSE_X] - ui_element_off;
+
+    *ptr = (mouse_x_val+_ui_var_1[ui_id])>>_ui_var_2[ui_id]; 
 }

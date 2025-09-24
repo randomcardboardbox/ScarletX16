@@ -41,7 +41,7 @@ u8 context_container_id;
 
 char pal_text[] = "-palette"; 
 initialize_palette_ui(){
-    u8 pal_text_ui_id = create_ui_element(palette_container_id, UI_TEXT, 2, 1, 0, 1, _draw_ui_text, NULL);
+    u8 pal_text_ui_id = create_ui_element(palette_container_id, UI_TEXT, 1, 1, 0, 1, _draw_ui_text, NULL);
     init_text_element(pal_text_ui_id, pal_text);
     
 }
@@ -68,11 +68,11 @@ char tool_text[] = "-tools";
 #define TOOL_ICON_ADDR 96
 initialize_tool_ui(){
     u8 i;
-    u8 x=2;
+    u8 x=1;
     u8 y=2;
     u8 icon;
     u8 gfx_addr_offset = 0;
-    u8 tool_text_ui_id = create_ui_element(tool_container_id, UI_TEXT, 2, 1, 0, 1, _draw_ui_text, NULL);
+    u8 tool_text_ui_id = create_ui_element(tool_container_id, UI_TEXT, 1, 1, 0, 1, _draw_ui_text, NULL);
     init_text_element(tool_text_ui_id, tool_text);
 
     for(i=0; i<8; i++){
@@ -85,7 +85,7 @@ initialize_tool_ui(){
         gfx_addr_offset += 4;
 
         if(i == 3){
-            x = 2;
+            x = 1;
             y += 2;
         }
     }
@@ -103,16 +103,16 @@ void initialize_paint_ui(){
     _load_file_into_vram("d0mouse.spr", 12, 1, 0x6000);
     _load_palette_from_file("font.pal", 9, 14);
 
-    header_container_id =   create_ui_element(0, UI_BOX, 0, 0, 40, 3, _draw_ui_box, NULL);
-    tool_container_id =     create_ui_element(0, UI_BOX, 28, 3, 12, 7, _draw_ui_box, NULL);
-    palette_container_id =  create_ui_element(0, UI_BOX, 28, 10, 12, 20, _draw_ui_box, NULL);
-    context_container_id =  create_ui_element(0, UI_BOX, 0, 23, 28, 7, _draw_ui_box, NULL);
+    header_container_id =   create_ui_element(0, UI_BOX, 29, 0, 10, 3, _draw_ui_box, NULL);
+    tool_container_id =     create_ui_element(0, UI_BOX, 29, 3, 10, 7, _draw_ui_box, NULL);
+    palette_container_id =  create_ui_element(0, UI_BOX, 29, 18, 10, 11, _draw_ui_box, NULL);
+    context_container_id =  create_ui_element(0, UI_BOX, 29, 10, 10, 8, _draw_ui_box, NULL);
 
     initialize_palette_ui();
     #define palette_spr_adrr_1 (0x14000>>5)
     #define palette_spr_adrr_2 (0x15000>>5)
     _set_sprite_attribute(7, palette_spr_adrr_1, 1, PAL_SPR_X, PAL_SPR_Y, 0b00001100, 0b1111, 0);
-    _set_sprite_attribute(8, palette_spr_adrr_2, 1, PAL_SPR_X, PAL_SPR_Y+64, 0b00001100, 0b1111, 0);
+    // _set_sprite_attribute(8, palette_spr_adrr_2, 1, PAL_SPR_X, PAL_SPR_Y+64, 0b00001100, 0b1111, 0);
 
     initialize_tool_ui();
 }

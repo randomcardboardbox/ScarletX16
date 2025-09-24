@@ -206,10 +206,11 @@ _context_container_id:
 	jsr     pusha
 	lda     #$02
 	jsr     pusha
+	lda     #$1D
+	jsr     pusha
 	lda     #$00
 	jsr     pusha
-	jsr     pusha
-	lda     #$28
+	lda     #$0A
 	jsr     pusha
 	lda     #$03
 	jsr     pusha
@@ -224,11 +225,11 @@ _context_container_id:
 	jsr     pusha
 	lda     #$02
 	jsr     pusha
-	lda     #$1C
+	lda     #$1D
 	jsr     pusha
 	lda     #$03
 	jsr     pusha
-	lda     #$0C
+	lda     #$0A
 	jsr     pusha
 	lda     #$07
 	jsr     pusha
@@ -243,13 +244,13 @@ _context_container_id:
 	jsr     pusha
 	lda     #$02
 	jsr     pusha
-	lda     #$1C
+	lda     #$1D
+	jsr     pusha
+	lda     #$12
 	jsr     pusha
 	lda     #$0A
 	jsr     pusha
-	lda     #$0C
-	jsr     pusha
-	lda     #$14
+	ina
 	jsr     pusha
 	lda     #<(__draw_ui_box)
 	ldx     #>(__draw_ui_box)
@@ -262,13 +263,12 @@ _context_container_id:
 	jsr     pusha
 	lda     #$02
 	jsr     pusha
-	lda     #$00
+	lda     #$1D
 	jsr     pusha
-	lda     #$17
+	lda     #$0A
 	jsr     pusha
-	lda     #$1C
 	jsr     pusha
-	lda     #$07
+	lda     #$08
 	jsr     pusha
 	lda     #<(__draw_ui_box)
 	ldx     #>(__draw_ui_box)
@@ -284,23 +284,6 @@ _context_container_id:
 	lda     #$00
 	jsr     pushax
 	ina
-	jsr     pusha
-	lda     #$F0
-	jsr     pusha0
-	lda     #$60
-	jsr     pusha0
-	lda     #$0C
-	jsr     pusha
-	lda     #$0F
-	jsr     pusha
-	lda     #$00
-	jsr     __set_sprite_attribute
-	lda     #$08
-	jsr     pusha
-	ldx     #$0A
-	lda     #$80
-	jsr     pushax
-	lda     #$01
 	jsr     pusha
 	lda     #$F0
 	jsr     pusha0
@@ -384,9 +367,7 @@ L000F:	lda     _tool_container_id
 	jsr     pusha
 	lda     #$01
 	jsr     pusha
-	ina
 	jsr     pusha
-	dea
 	jsr     pusha
 	dea
 	jsr     pusha
@@ -421,8 +402,9 @@ L000F:	lda     _tool_container_id
 .segment	"CODE"
 
 	jsr     decsp1
-	lda     #$02
+	lda     #$01
 	jsr     pusha
+	ina
 	jsr     pusha
 	jsr     decsp1
 	lda     #$00
@@ -431,9 +413,7 @@ L000F:	lda     _tool_container_id
 	jsr     pusha
 	lda     #$01
 	jsr     pusha
-	ina
 	jsr     pusha
-	dea
 	jsr     pusha
 	dea
 	jsr     pusha
@@ -514,11 +494,12 @@ L0006:	ldy     #$01
 	lda     (sp),y
 	cmp     #$03
 	bne     L000B
-	dea
+	lda     #$01
 	dey
 	sta     (sp),y
 	dey
 	clc
+	ina
 	adc     (sp),y
 	sta     (sp),y
 	ldy     #$05
