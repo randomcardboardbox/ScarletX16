@@ -15,6 +15,7 @@
 	.export		_init_text_element
 	.export		_init_icon_element
 	.export		_init_slider_element
+	.export		_init_variable_display
 	.export		_slider_on_mouse_func
 	.export		_parse_mouse_input
 	.export		_get_keycode
@@ -44,12 +45,15 @@
 	.import		__ui_last_child
 	.import		__ui_next_sib
 	.import		__ui_prev_sib
+	.export		_enable_mouse_funcs
 	.import		__draw_ui_element
 	.export		_update_ui_elements_from_ptr
 
 .segment	"BSS"
 
 _keycode:
+	.res	1,$00
+_enable_mouse_funcs:
 	.res	1,$00
 
 ; ---------------------------------------------------------------
@@ -65,7 +69,7 @@ _keycode:
 	jsr     pushax
 	jsr     decsp1
 	lda     #$01
-L0021:	sta     (sp)
+L0022:	sta     (sp)
 	ldx     #$00
 	lda     (sp)
 	cmp     #$1E
@@ -117,10 +121,10 @@ L000E:	sta     ptr1
 	ldx     #$00
 	lda     (sp)
 	asl     a
-	bcc     L0022
+	bcc     L0023
 	inx
 	clc
-L0022:	adc     #<(__ui_on_mouse)
+L0023:	adc     #<(__ui_on_mouse)
 	sta     ptr1
 	txa
 	adc     #>(__ui_on_mouse)
@@ -164,11 +168,15 @@ L0022:	adc     #<(__ui_on_mouse)
 	tay
 	lda     #$00
 	sta     __ui_var_ptr_high,y
+	lda     (sp)
+	tay
+	lda     #$F0
+	sta     __ui_palette,y
 	ldy     #$0A
 	lda     (sp),y
 	tay
 	lda     __ui_last_child,y
-	beq     L0017
+	beq     L0018
 	ldy     #$0A
 	lda     (sp),y
 	tay
@@ -184,13 +192,13 @@ L0022:	adc     #<(__ui_on_mouse)
 	lda     (sp)
 	sta     __ui_prev_sib,x
 	jsr     incsp1
-	bra     L001C
-L0017:	ldy     #$0A
+	bra     L001D
+L0018:	ldy     #$0A
 	lda     (sp),y
 	tax
 	lda     (sp)
 	sta     __ui_first_child,x
-L001C:	ldy     #$0A
+L001D:	ldy     #$0A
 	lda     (sp),y
 	tax
 	lda     (sp)
@@ -200,9 +208,9 @@ L001C:	ldy     #$0A
 	ldy     #$0A
 	clc
 	adc     (sp),y
-	bcc     L001F
+	bcc     L0020
 	inx
-L001F:	sta     sreg
+L0020:	sta     sreg
 	stx     sreg+1
 	sta     ptr1
 	stx     ptr1+1
@@ -215,7 +223,7 @@ L001F:	sta     sreg
 L0004:	clc
 	lda     #$01
 	adc     (sp)
-	jmp     L0021
+	jmp     L0022
 L0003:	ldy     #$0B
 	jmp     addysp
 
@@ -508,6 +516,38 @@ L0003:	sta     ptr1
 .endproc
 
 ; ---------------------------------------------------------------
+; void __near__ init_variable_display (unsigned char ui_id, unsigned int variable_addr)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_init_variable_display: near
+
+.segment	"CODE"
+
+	jsr     pushax
+	ldy     #$02
+	lda     (sp),y
+	tax
+	lda     (sp)
+	sta     __ui_var_ptr_low,x
+	lda     #<(__ui_var_ptr_high)
+	ldx     #>(__ui_var_ptr_high)
+	ldy     #$02
+	clc
+	adc     (sp),y
+	bcc     L0003
+	inx
+L0003:	sta     ptr1
+	stx     ptr1+1
+	dey
+	lda     (sp),y
+	sta     (ptr1)
+	jmp     incsp3
+
+.endproc
+
+; ---------------------------------------------------------------
 ; void __near__ slider_on_mouse_func (unsigned char ui_id)
 ; ---------------------------------------------------------------
 
@@ -547,10 +587,6 @@ L0007:	jsr     pushax
 	tax
 	pla
 	jsr     pushax
-	ldy     #$05
-	jsr     ldaxysp
-	sta     sreg
-	stx     sreg+1
 	ldy     #$06
 	lda     (sp),y
 	tay
@@ -571,8 +607,15 @@ L0007:	jsr     pushax
 	lda     ptr1
 	ldx     ptr1+1
 	jsr     shraxy
-	sta     (sreg)
-	jmp     incsp7
+	jsr     pushax
+	ldy     #$07
+	jsr     ldaxysp
+	sta     ptr1
+	stx     ptr1+1
+	lda     (sp)
+	sta     (ptr1)
+	ldy     #$09
+	jmp     addysp
 
 .endproc
 
@@ -598,9 +641,11 @@ L0007:	jsr     pushax
 	jsr     pusha
 	lda     __mouse_data+4
 	jsr     pusha
+	lda     _enable_mouse_funcs
+	beq     L0005
 	lda     (sp)
 	and     #$01
-	beq     L0004
+	beq     L0005
 	lda     #$00
 	jsr     pusha
 	ldy     #$03
@@ -611,14 +656,14 @@ L0007:	jsr     pushax
 	jsr     _check_mouse_over_ui
 	jsr     pusha
 	lda     (sp)
-	beq     L0005
+	beq     L0006
 	ldx     #$00
 	lda     (sp)
 	asl     a
-	bcc     L000C
+	bcc     L000D
 	inx
 	clc
-L000C:	adc     #<(__ui_on_mouse)
+L000D:	adc     #<(__ui_on_mouse)
 	tay
 	txa
 	adc     #>(__ui_on_mouse)
@@ -626,16 +671,16 @@ L000C:	adc     #<(__ui_on_mouse)
 	tya
 	jsr     ldaxi
 	cpx     #$00
-	bne     L0008
+	bne     L0009
 	cmp     #$00
-	beq     L0005
-L0008:	ldx     #$00
+	beq     L0006
+L0009:	ldx     #$00
 	lda     (sp)
 	asl     a
-	bcc     L000D
+	bcc     L000E
 	inx
 	clc
-L000D:	adc     #<(__ui_on_mouse)
+L000E:	adc     #<(__ui_on_mouse)
 	tay
 	txa
 	adc     #>(__ui_on_mouse)
@@ -656,8 +701,8 @@ L000D:	adc     #<(__ui_on_mouse)
 	jsr     jmpvec
 	jsr     incsp2
 	jsr     incsp2
-L0005:	jsr     incsp1
-L0004:	jmp     incsp3
+L0006:	jsr     incsp1
+L0005:	jmp     incsp3
 
 .endproc
 

@@ -48,6 +48,8 @@
 .export __draw_ui_vline
 .export __draw_ui_icon
 .export __draw_ui_slider
+.export __draw_ui_display_b16
+.export __draw_ui_display_b10
 
 .export __test_on_mouse_func
 .export __press_toggle_button_mouse_func
@@ -654,6 +656,155 @@ __draw_ui_slider:
 
 
 __draw_empty_ui:
+    rts
+
+HEX_PLACES: .byte $10, $01
+DEC_PLACES: .byte 100, 10, 1
+VAR_VAL = ZP_PTR_4
+DIS_VAR_PTR = ZP_PTR_5
+CURR_DIGIT = ZP_PTR_6
+CURR_PLACE = ZP_PTR_7
+HAS_SKIPPED_ZERO = ZP_PTR_8
+DIS_PAL = ZP_PTR_9
+__draw_ui_display_b16:
+    init_draw_ui
+    lda #($F0)
+    stz VERA_data0
+    sta VERA_data0
+    stz VERA_data0
+    sta VERA_data0
+
+    set_ui_vera_data_port
+
+    lda __ui_palette, x
+    sta DIS_PAL
+
+    stz HAS_SKIPPED_ZERO
+
+    lda __ui_var_ptr_low, x
+    sta DIS_VAR_PTR
+    lda __ui_var_ptr_high, x
+    sta DIS_VAR_PTR+1
+
+    lda (DIS_VAR_PTR)
+    sta VAR_VAL
+
+    ldy #0
+    @places_loop:
+        lda HEX_PLACES, y
+        sta CURR_PLACE
+
+        lda VAR_VAL
+        stz CURR_DIGIT
+        @counting_loop:
+        cmp CURR_PLACE
+        bmi @stop_counting
+            sec
+            sbc CURR_PLACE
+            inc CURR_DIGIT
+        jmp @counting_loop
+        @stop_counting:
+
+        sta VAR_VAL
+
+        lda CURR_DIGIT
+        bne @start_drawing_digit
+
+        ldx HAS_SKIPPED_ZERO
+        bne @start_drawing_digit
+
+        cpy #1
+        beq @start_drawing_digit
+         
+        jmp @skip_drawing_zero
+
+        @start_drawing_digit:
+        inc HAS_SKIPPED_ZERO
+        cmp #10
+        bpl @alpha_offset
+        clc
+        adc #16
+        jmp @draw_char_to_scr
+
+        @alpha_offset:
+        clc
+        adc #(33-10)
+
+        @draw_char_to_scr:
+        sta VERA_data0
+        lda DIS_PAL
+        sta VERA_data0
+        @skip_drawing_zero:
+    iny
+    cpy #2
+    bne @places_loop
+
+    rts
+
+__draw_ui_display_b10:
+    init_draw_ui
+    lda #($F0)
+    stz VERA_data0
+    sta VERA_data0
+    stz VERA_data0
+    sta VERA_data0
+
+    set_ui_vera_data_port
+
+    lda __ui_palette, x
+    sta DIS_PAL
+
+    stz HAS_SKIPPED_ZERO
+
+    lda __ui_var_ptr_low, x
+    sta DIS_VAR_PTR
+    lda __ui_var_ptr_high, x
+    sta DIS_VAR_PTR+1
+
+    lda (DIS_VAR_PTR)
+    sta VAR_VAL
+
+    ldy #0
+    @places_loop:
+        lda DEC_PLACES, y
+        sta CURR_PLACE
+
+        lda VAR_VAL
+        stz CURR_DIGIT
+        @counting_loop:
+        cmp CURR_PLACE
+        bmi @stop_counting
+            sec
+            sbc CURR_PLACE
+            inc CURR_DIGIT
+        jmp @counting_loop
+        @stop_counting:
+
+        sta VAR_VAL
+
+        lda CURR_DIGIT
+        bne @start_drawing_digit
+
+        ldx HAS_SKIPPED_ZERO
+        bne @start_drawing_digit
+
+        cpy #2
+        beq @start_drawing_digit
+         
+        jmp @skip_drawing_zero
+
+        @start_drawing_digit:
+        inc HAS_SKIPPED_ZERO
+        clc
+        adc #16
+        sta VERA_data0
+        lda DIS_PAL
+        sta VERA_data0
+        @skip_drawing_zero:
+    iny
+    cpy #3
+    bne @places_loop
+
     rts
 
 __test_on_mouse_func:

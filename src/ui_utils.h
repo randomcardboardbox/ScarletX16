@@ -19,6 +19,7 @@ extern u8 delete_ui_element(u8 id);
 extern void init_text_element(u8 ui_id, u16 text_ptr);
 extern void init_icon_element(u8 ui_id, u8 icon_addr, u16 variable_addr, u8 variable_value);
 extern void init_slider_element(u8 ui_id, u8 offset, u8 scale, u16 variable_addr);
+extern void init_variable_display(u8 ui_id, u16 variable_addr);
 extern void slider_on_mouse_func(u8 ui_id);
 extern void parse_mouse_input(void);
 extern void get_keycode(void);
@@ -68,6 +69,8 @@ extern u8 _ui_last_child[MAX_UI_ELEMENTS];
 extern u8 _ui_next_sib[MAX_UI_ELEMENTS];
 extern u8 _ui_prev_sib[MAX_UI_ELEMENTS];
 
+extern u8 enable_mouse_funcs;
+
 extern void _initialize_mouse(void);
 extern void _get_mouse_input(void);
 extern void _draw_ui(void);
@@ -83,6 +86,8 @@ extern void _draw_ui_hline(u8 id);
 extern void _draw_ui_vline(u8 id);
 extern void _draw_ui_icon(u8 id);
 extern void _draw_ui_slider(u8 id);
+extern void _draw_ui_display_b16(u8 id);
+extern void _draw_ui_display_b10(u8 id);
 
 extern void _test_on_mouse_func(u8 id);
 extern void _press_toggle_button_mouse_func(u8 id);

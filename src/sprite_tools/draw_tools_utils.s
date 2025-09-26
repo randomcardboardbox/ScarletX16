@@ -36,7 +36,20 @@
 	.import		_add_new_history_node
 	.import		__mouse_data
 	.import		_keycode
+	.import		_enable_mouse_funcs
 	.import		_draw_brush_to_sprite
+	.export		_brush_size
+	.export		_brush_type
+	.export		_previous_point_x
+	.export		_previous_point_y
+	.export		_line_brush_size
+	.export		_line_brush_type
+	.export		_rect_brush_size
+	.export		_rect_brush_type
+	.export		_point_selected
+	.export		_was_drawing_last_frame
+	.export		_tool_before_pal_edit
+	.import		_redraw_tool_ui
 	.export		_draw_pixel_line_h
 	.export		_draw_pixel_line_v
 	.export		_draw_brush_line_h
@@ -44,12 +57,9 @@
 	.export		_draw_brush_horizontal_line
 	.export		_draw_brush_vertical_line
 	.export		_mouse_addrs
-	.export		_was_drawing_last_frame
 	.export		_old_pix_x
 	.export		_old_pix_y
 	.export		_old_button
-	.export		_brush_type
-	.export		_brush_size
 	.export		_fill_offset_arr_x
 	.export		_fill_offset_arr_y
 	.export		_flood_fill_queue_x
@@ -61,11 +71,6 @@
 	.export		_flood_fill_pixel
 	.export		_is_contiguous
 	.export		_flood_fill
-	.export		_line_brush_size
-	.export		_line_brush_type
-	.export		_point_selected
-	.export		_previous_point_x
-	.export		_previous_point_y
 	.export		_line_draw_tool
 	.export		_circle_brush_size
 	.export		_circle_brush_type
@@ -73,8 +78,6 @@
 	.export		_circle_is_filled
 	.export		_circle_draw_tool
 	.export		_draw_filled_rect
-	.export		_rect_brush_size
-	.export		_rect_brush_type
 	.export		_rect_is_filled
 	.export		_rectangle_draw_tool
 	.export		_set_colour
@@ -82,6 +85,9 @@
 	.export		_handle_key_command
 	.export		_get_pal_spr_pos_x
 	.export		_get_pal_spr_pos_y
+	.export		_double_click_timer
+	.export		_released_click
+	.export		_last_clicked_col
 	.export		_palette_selection_handler
 
 .segment	"DATA"
@@ -95,6 +101,7 @@ _mouse_addrs:
 	.dword	$00016200
 	.dword	$00016200
 	.dword	$00016200
+	.dword	$00016000
 _was_drawing_last_frame:
 	.byte	$00
 _old_pix_x:
@@ -149,16 +156,24 @@ _rect_brush_type:
 	.byte	$00
 _rect_is_filled:
 	.byte	$01
+_double_click_timer:
+	.byte	$00
+_released_click:
+	.byte	$00
+_last_clicked_col:
+	.byte	$00
+_tool_before_pal_edit:
+	.byte	$00
 
 .segment	"BSS"
 
-_selection_colour:
-	.res	1,$00
-_fill_colour:
-	.res	1,$00
 _previous_point_x:
 	.res	1,$00
 _previous_point_y:
+	.res	1,$00
+_selection_colour:
+	.res	1,$00
+_fill_colour:
 	.res	1,$00
 
 ; ---------------------------------------------------------------
@@ -1008,45 +1023,88 @@ L0005:	bcs     L0002
 	jsr     tosadd0ax
 	jsr     pushax
 	lda     #$00
-	bra     L002A
+	bra     L002E
 L0002:	ldx     #$8B
 	lda     #$00
 	jsr     pushax
-L002A:	jsr     __set_sprite_address
-	lda     (sp)
+L002E:	jsr     __set_sprite_address
+	ldy     #$06
+	jsr     ldaxysp
+	cmp     #$F0
+	txa
+	sbc     #$00
+	bcc     L0009
+	ldy     #$06
+	lda     (sp),y
+	cmp     #$01
+	bne     L000B
+	dey
+	lda     (sp),y
+	cmp     #$30
+L000B:	bcs     L0009
+	ldy     #$04
+	jsr     ldaxysp
+	cmp     #$A0
+	txa
+	sbc     #$00
+	bcc     L0009
+	ldy     #$04
+	lda     (sp),y
+	cmp     #$01
+	bne     L000C
+	dey
+	lda     (sp),y
+	cmp     #$20
+L000C:	bcs     L0009
+	ldy     #$08
+	jsr     pushwysp
+	ldy     #$08
+	jsr     pushwysp
+	ldy     #$04
+	lda     (sp),y
+	jsr     _palette_selection_handler
+L0009:	lda     (sp)
 	and     #$01
-	bne     L002E
+	bne     L0039
 	lda     (sp)
 	and     #$02
-	jeq     L0009
-L002E:	ldy     #$06
+	bne     L0039
+	ina
+	sta     _enable_mouse_funcs
+L0039:	lda     (sp)
+	and     #$01
+	bne     L003A
+	lda     (sp)
+	and     #$02
+	jeq     L0013
+L003A:	ldy     #$06
 	jsr     ldaxysp
 	cmp     #$60
 	txa
 	sbc     #$00
-	jcc     L000C
+	jcc     L0013
 	ldy     #$06
 	lda     (sp),y
 	cmp     #$00
-	bne     L000E
+	bne     L0018
 	dey
 	lda     (sp),y
 	cmp     #$E0
-L000E:	jcs     L000C
+L0018:	jcs     L0013
 	ldy     #$04
 	jsr     ldaxysp
 	cmp     #$28
 	txa
 	sbc     #$00
-	jcc     L000C
+	jcc     L0013
 	ldy     #$04
 	lda     (sp),y
 	cmp     #$00
-	bne     L000F
+	bne     L0019
 	dey
 	lda     (sp),y
 	cmp     #$A8
-L000F:	jcs     L000C
+L0019:	jcs     L0013
 	ldx     #$00
 	lda     #$60
 	ldy     #$05
@@ -1084,16 +1142,16 @@ L000F:	jcs     L000C
 	lda     _old_pix_x
 	iny
 	cmp     (sp),y
-	bne     L0032
+	bne     L003E
 	lda     _old_pix_y
 	dey
 	cmp     (sp),y
-	bne     L0032
+	bne     L003E
 	lda     _old_button
 	cmp     (sp)
-	jeq     L001F
-L0032:	lda     __current_tool
-	bne     L0033
+	jeq     L0029
+L003E:	lda     __current_tool
+	bne     L003F
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -1103,10 +1161,10 @@ L0032:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _draw_pixel_to_sprite
-	jmp     L001F
-L0033:	lda     __current_tool
+	jmp     L0029
+L003F:	lda     __current_tool
 	cmp     #$01
-	bne     L0034
+	bne     L0040
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -1116,10 +1174,10 @@ L0033:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _flood_fill
-	bra     L001F
-L0034:	lda     __current_tool
+	bra     L0029
+L0040:	lda     __current_tool
 	cmp     #$03
-	bne     L0035
+	bne     L0041
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -1129,10 +1187,10 @@ L0034:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _line_draw_tool
-	bra     L001F
-L0035:	lda     __current_tool
+	bra     L0029
+L0041:	lda     __current_tool
 	cmp     #$04
-	bne     L0036
+	bne     L0042
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -1142,10 +1200,10 @@ L0035:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _eye_dropper_tool
-	bra     L001F
-L0036:	lda     __current_tool
+	bra     L0029
+L0042:	lda     __current_tool
 	cmp     #$07
-	bne     L0037
+	bne     L0043
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -1155,10 +1213,10 @@ L0036:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _rectangle_draw_tool
-	bra     L001F
-L0037:	lda     __current_tool
+	bra     L0029
+L0043:	lda     __current_tool
 	cmp     #$06
-	bne     L001F
+	bne     L0029
 	ldy     #$02
 	lda     (sp),y
 	jsr     pusha
@@ -1168,58 +1226,18 @@ L0037:	lda     __current_tool
 	ldy     #$02
 	lda     (sp),y
 	jsr     _circle_draw_tool
-L001F:	ldy     #$02
+L0029:	ldy     #$02
 	lda     (sp),y
 	sta     _old_pix_x
 	dey
 	lda     (sp),y
 	sta     _old_pix_y
-	bra     L0028
-L000C:	lda     _was_drawing_last_frame
-	beq     L0039
+	bra     L002C
+L0013:	lda     _was_drawing_last_frame
+	beq     L002F
 	jsr     _add_new_history_node
-L0039:	stz     _was_drawing_last_frame
-	ldy     #$06
-	jsr     ldaxysp
-	cmp     #$F0
-	txa
-	sbc     #$00
-	bcc     L0028
-	ldy     #$06
-	lda     (sp),y
-	cmp     #$01
-	bne     L0024
-	dey
-	lda     (sp),y
-	cmp     #$30
-L0024:	bcs     L0028
-	ldy     #$04
-	jsr     ldaxysp
-	cmp     #$A0
-	txa
-	sbc     #$00
-	bcc     L0028
-	ldy     #$04
-	lda     (sp),y
-	cmp     #$01
-	bne     L0025
-	dey
-	lda     (sp),y
-	cmp     #$20
-L0025:	bcs     L0028
-	ldy     #$08
-	jsr     pushwysp
-	ldy     #$08
-	jsr     pushwysp
-	ldy     #$04
-	lda     (sp),y
-	jsr     _palette_selection_handler
-	bra     L0028
-L0009:	lda     _was_drawing_last_frame
-	beq     L003E
-	jsr     _add_new_history_node
-L003E:	stz     _was_drawing_last_frame
-L0028:	lda     (sp)
+L002F:	stz     _was_drawing_last_frame
+L002C:	lda     (sp)
 	sta     _old_button
 	jmp     incsp7
 
@@ -3159,28 +3177,64 @@ L001D:	lda     _keycode
 	jsr     tosumula0
 	jsr     tosaddax
 	jsr     pusha
-	lda     _bmx_no_pals+1
+	lda     _double_click_timer
+	beq     L0002
+	dec     _double_click_timer
+L0002:	lda     _bmx_no_pals+1
 	sta     ptr1+1
 	lda     _bmx_no_pals
 	sta     ptr1
 	lda     (ptr1)
 	cmp     (sp)
-	bcc     L0004
-	beq     L0004
+	bcc     L000D
+	beq     L000D
 	ldy     #$03
 	lda     (sp),y
 	and     #$01
-	beq     L0003
+	beq     L0016
 	lda     #<(__primary_colour)
 	ldx     #>(__primary_colour)
-	bra     L0008
-L0003:	lda     #<(__secondary_colour)
-	ldx     #>(__secondary_colour)
-L0008:	jsr     pushax
+	jsr     pushax
 	ldy     #$02
 	lda     (sp),y
 	jsr     _set_colour
-L0004:	jmp     incsp8
+	lda     _released_click
+	cmp     #$01
+	bne     L000C
+	lda     _double_click_timer
+	beq     L0015
+	lda     _last_clicked_col
+	cmp     (sp)
+	bne     L0015
+	lda     __current_tool
+	cmp     #$08
+	beq     L0014
+	sta     _tool_before_pal_edit
+	lda     #$08
+L0014:	sta     __current_tool
+	lda     #$01
+	sta     _redraw_tool_ui
+	dea
+	bra     L000E
+L0015:	lda     #$1E
+L000E:	sta     _double_click_timer
+	lda     (sp)
+	sta     _last_clicked_col
+	lda     #$00
+	bra     L000F
+L0016:	ina
+L000F:	sta     _released_click
+L000C:	ldy     #$03
+	lda     (sp),y
+	and     #$02
+	beq     L000D
+	lda     #<(__secondary_colour)
+	ldx     #>(__secondary_colour)
+	jsr     pushax
+	ldy     #$02
+	lda     (sp),y
+	jsr     _set_colour
+L000D:	jmp     incsp8
 
 .endproc
 

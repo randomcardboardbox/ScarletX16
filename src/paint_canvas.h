@@ -11,6 +11,7 @@
 #define GRADIENT_TOOL 5
 #define CIRCLE_TOOL 6
 #define RECT_TOOL 7
+#define PAL_EDIT_TOOL 8
 
 #define SPRITE_VRAM_DATA_ADDR 0x08000
 #define DISPLAY_VRAM_ADDR 0x0C000
@@ -56,6 +57,7 @@ extern u8 _square_root(u16 number);
 extern void _initialize_bmx_data(void);
 extern void _draw_canvas_to_screen(void);
 extern void _render_palette_sprites(void);
+extern void _render_colour_sprite(u8 col, u8 bank, u16 spr_addr);
 extern void _draw_row_to_screen(u8 row);
 extern void _transfer_pal_to_vera(void);
 extern void _transfer_sprite_to_vram(u16 size, u16 addr, u8 ram_bank);

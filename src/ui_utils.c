@@ -25,6 +25,8 @@ u8 create_ui_element(u8 parent_id, u8 type, u8 pos_x, u8 pos_y, u8 size_x, u8 si
             _ui_var_ptr_low[i] = NULL;
             _ui_var_ptr_high[i] = NULL;
 
+            _ui_palette[i] = 0xF0;
+
             if(_ui_last_child[parent_id] != 0){
                 u8 last_child_id = _ui_last_child[parent_id];
                 
@@ -106,12 +108,14 @@ void get_keycode(){
     asm("sta %v", keycode);
 }
 
+u8 enable_mouse_funcs;
 void parse_mouse_input(){
     
     u8 mouse_x = (_mouse_data[MOUSE_X]>>3)+1;
     u8 mouse_y = (_mouse_data[MOUSE_Y]>>3)+1;
     u8 mouse_buttons = _mouse_data[MOUSE_BUTTONS];
 
+    if(!enable_mouse_funcs) return;
 
     if(mouse_buttons & M_LEFT_BUT){
         u8 id = check_mouse_over_ui(0, mouse_x, mouse_y);
@@ -155,6 +159,11 @@ void init_text_element(u8 ui_id, u16 text_ptr){
     _ui_var_ptr_high[ui_id] = text_ptr>>8;
 }
 
+void init_variable_display(u8 ui_id, u16 variable_addr){
+    _ui_var_ptr_low[ui_id] = variable_addr;
+    _ui_var_ptr_high[ui_id] = variable_addr>>8;
+}
+
 void init_icon_element(u8 ui_id, u8 icon_addr, u16 variable_addr, u8 variable_value){
     u8* val_ptr = variable_addr;
     _ui_var_1[ui_id] = icon_addr;
@@ -179,6 +188,13 @@ void slider_on_mouse_func(u8 ui_id){
     u8 *ptr = _ui_var_ptr_low[ui_id] + (_ui_var_ptr_high[ui_id]<<8);
     u16 ui_element_off = ((u16)_ui_global_pos_x[ui_id])<<3;
     u16 mouse_x_val = _mouse_data[MOUSE_X] - ui_element_off;
+    u16 val = (mouse_x_val+_ui_var_1[ui_id])>>_ui_var_2[ui_id];
 
-    *ptr = (mouse_x_val+_ui_var_1[ui_id])>>_ui_var_2[ui_id]; 
+    // if(_ui_var_2[ui_id] > 0){
+    //     if(mouse_x_val == (_ui_size_x[ui_id]<<3)-1){
+    //         val = ((_ui_size_x[ui_id]<<3)+_ui_var_1[ui_id])>>_ui_var_2[ui_id];
+    //     }
+    // }
+
+    *ptr = val; 
 }

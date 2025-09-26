@@ -5,6 +5,7 @@
 .export __transfer_sprite_to_vram
 .export __draw_canvas_to_screen
 .export __render_palette_sprites
+.export __render_colour_sprite
 .export __draw_row_to_screen 
 .export __transfer_pal_to_vera
 .export __image_data_size
@@ -583,6 +584,27 @@ __render_palette_sprites:
     bne @colour_loop
 
     rts
+
+__render_colour_sprite:
+    stz VERA_ctrl
+    sta VERA_addr_low
+    stx VERA_addr_high
+
+    lda (sp)
+    ora #(%00010000)
+    sta VERA_addr_bank
+    inc sp
+
+    ldx #64
+    lda (sp)
+    inc sp
+    @place_pixel_loop:
+        sta VERA_data0
+    dex
+    bne @place_pixel_loop
+
+    rts
+
 ROW_DISPLAY_ADDR = ZP_PTR_1
 ROW_SPRITE_ADDR = ZP_PTR_2
 __draw_row_to_screen:

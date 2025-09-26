@@ -10,31 +10,47 @@
 	.importzp	sp, sreg, regsave, regbank
 	.importzp	tmp1, tmp2, tmp3, tmp4, ptr1, ptr2, ptr3, ptr4
 	.macpack	longbranch
+	.import		__set_sprite_attribute
+	.import		__clear_sprite_attribute
 	.export		_tool_ui_handler
 	.export		_brush_ui_handler
+	.import		__primary_colour
 	.import		__current_tool
+	.import		__render_colour_sprite
 	.import		_context_container_id
 	.import		_create_ui_element
 	.import		_delete_ui_element
 	.import		_init_text_element
 	.import		_init_icon_element
 	.import		_init_slider_element
+	.import		_init_variable_display
 	.import		_slider_on_mouse_func
+	.import		_enable_mouse_funcs
 	.import		__draw_ui_element
 	.import		__update_ui_element_position
 	.import		__empty_draw_func
 	.import		__draw_ui_text
 	.import		__draw_ui_icon
 	.import		__draw_ui_slider
+	.import		__draw_ui_display_b16
 	.import		__press_toggle_button_mouse_func
 	.import		_brush_size
 	.import		_brush_type
 	.import		_point_selected
+	.import		_tool_before_pal_edit
+	.export		_redraw_tool_ui
 	.export		_slider
 	.export		_context_parent_id
 	.export		_shape_text
 	.export		_size_text
 	.export		_text_id1
+	.export		_red_pal_col
+	.export		_green_pal_col
+	.export		_blue_pal_col
+	.export		_pal_edit_mouse_func
+	.export		_return_from_pal_edit
+	.export		_check_text
+	.export		_palette_edit_ui_handler
 	.export		_old_tool
 
 .segment	"DATA"
@@ -45,14 +61,35 @@ _size_text:
 	.byte	$53,$49,$5A,$45,$00
 _text_id1:
 	.byte	$00
+_check_text:
+	.byte	$7a
+	.byte	$00
 _old_tool:
 	.byte	$03
+_redraw_tool_ui:
+	.byte	$00
+
+.segment	"RODATA"
+
+S0003:
+	.byte	$43,$4F,$4C,$4F,$55,$52,$00
+S0005:
+	.byte	$47,$00
+S0006:
+	.byte	$42,$00
+S0004	:=	S0003+5
 
 .segment	"BSS"
 
 _slider:
 	.res	1,$00
 _context_parent_id:
+	.res	1,$00
+_red_pal_col:
+	.res	1,$00
+_green_pal_col:
+	.res	1,$00
+_blue_pal_col:
 	.res	1,$00
 
 ; ---------------------------------------------------------------
@@ -67,36 +104,21 @@ _context_parent_id:
 
 	lda     _old_tool
 	cmp     __current_tool
-	beq     L0007
+	bne     L0008
+	lda     _redraw_tool_ui
+	beq     L000C
+L0008:	stz     _redraw_tool_ui
 	stz     _point_selected
 	lda     _context_parent_id
-	beq     L0005
+	beq     L0009
 	jsr     _delete_ui_element
-L0005:	lda     __current_tool
-	bne     L0006
-	jsr     _brush_ui_handler
-L0006:	lda     _context_container_id
-	jsr     __update_ui_element_position
-	lda     _context_container_id
-	jsr     __draw_ui_element
-L0007:	lda     __current_tool
-	sta     _old_tool
-	rts
-
-.endproc
-
-; ---------------------------------------------------------------
-; void __near__ brush_ui_handler (void)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_brush_ui_handler: near
-
-.segment	"CODE"
-
-	jsr     decsp2
-	lda     _context_container_id
+	lda     #$08
+	jsr     __clear_sprite_attribute
+	lda     #$09
+	jsr     __clear_sprite_attribute
+	lda     #$0A
+	jsr     __clear_sprite_attribute
+L0009:	lda     _context_container_id
 	jsr     pusha
 	lda     #$02
 	jsr     pusha
@@ -114,6 +136,35 @@ L0007:	lda     __current_tool
 	txa
 	jsr     _create_ui_element
 	sta     _context_parent_id
+	lda     __current_tool
+	bne     L000A
+	jsr     _brush_ui_handler
+L000A:	lda     __current_tool
+	cmp     #$08
+	bne     L000B
+	jsr     _palette_edit_ui_handler
+L000B:	lda     _context_container_id
+	jsr     __update_ui_element_position
+	lda     _context_container_id
+	jsr     __draw_ui_element
+L000C:	lda     __current_tool
+	sta     _old_tool
+	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ brush_ui_handler (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_brush_ui_handler: near
+
+.segment	"CODE"
+
+	jsr     decsp2
+	lda     _context_parent_id
 	jsr     pusha
 	lda     #$01
 	jsr     pusha
@@ -236,6 +287,451 @@ L0007:	lda     __current_tool
 	ldx     #>(_brush_size)
 	jsr     _init_slider_element
 	jmp     incsp2
+
+.endproc
+
+; ---------------------------------------------------------------
+; int __near__ pal_edit_mouse_func (unsigned char ui_id)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_pal_edit_mouse_func: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	lda     #$00
+	jsr     pusha
+	jsr     pusha
+	stz     sreg+1
+	ina
+	sta     sreg
+	dea
+	ldx     #$FA
+	jsr     pusheax
+	ldy     #$06
+	lda     (sp),y
+	jsr     _slider_on_mouse_func
+	lda     _green_pal_col
+	asl     a
+	asl     a
+	asl     a
+	asl     a
+	clc
+	adc     _blue_pal_col
+	ldy     #$05
+	sta     (sp),y
+	lda     _red_pal_col
+	dey
+	sta     (sp),y
+	ldx     #$00
+	lda     __primary_colour
+	asl     a
+	bcc     L0003
+	inx
+L0003:	jsr     axulong
+	jsr     laddeq0sp
+	stz     $9F25
+	lda     (sp)
+	sta     $9F20
+	jsr     ldeax0sp
+	stx     $9F21
+	jsr     ldeax0sp
+	lda     sreg
+	ora     #$10
+	sta     $9F22
+	ldy     #$05
+	lda     (sp),y
+	sta     $9F23
+	dey
+	lda     (sp),y
+	sta     $9F23
+	ldx     #$00
+	txa
+	jmp     incsp7
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ return_from_pal_edit (unsigned char ui_id)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_return_from_pal_edit: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	lda     _tool_before_pal_edit
+	sta     __current_tool
+	stz     _enable_mouse_funcs
+	jmp     incsp1
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ palette_edit_ui_handler (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_palette_edit_ui_handler: near
+
+.segment	"CODE"
+
+	stz     sreg+1
+	lda     #$01
+	sta     sreg
+	dea
+	ldx     #$FA
+	jsr     pusheax
+	jsr     pusha
+	jsr     pusha
+	tax
+	lda     __primary_colour
+	asl     a
+	bcc     L0002
+	inx
+L0002:	jsr     axulong
+	ldy     #$02
+	jsr     laddeqysp
+	stz     $9F25
+	ldy     #$02
+	lda     (sp),y
+	sta     $9F20
+	ldy     #$05
+	jsr     ldeaxysp
+	stx     $9F21
+	ldy     #$05
+	jsr     ldeaxysp
+	lda     sreg
+	ora     #$10
+	sta     $9F22
+	lda     $9F23
+	ldy     #$01
+	sta     (sp),y
+	lda     $9F23
+	sta     (sp)
+	sta     _red_pal_col
+	ldy     #$01
+	lda     (sp),y
+	lsr     a
+	lsr     a
+	lsr     a
+	lsr     a
+	sta     _green_pal_col
+	lda     (sp),y
+	and     #$0F
+	sta     _blue_pal_col
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	jsr     pusha
+	jsr     pusha
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_text)
+	ldx     #>(__draw_ui_text)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(S0003)
+	ldx     #>(S0003)
+	jsr     _init_text_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	ina
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_text)
+	ldx     #>(__draw_ui_text)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(S0004)
+	ldx     #>(S0004)
+	jsr     _init_text_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #$04
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_text)
+	ldx     #>(__draw_ui_text)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(S0005)
+	ldx     #>(S0005)
+	jsr     _init_text_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #$05
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_text)
+	ldx     #>(__draw_ui_text)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(S0006)
+	ldx     #>(S0006)
+	jsr     _init_text_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #$03
+	jsr     pusha
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_display_b16)
+	ldx     #>(__draw_ui_display_b16)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(_red_pal_col)
+	ldx     #>(_red_pal_col)
+	jsr     _init_variable_display
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #$03
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_display_b16)
+	ldx     #>(__draw_ui_display_b16)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(_green_pal_col)
+	ldx     #>(_green_pal_col)
+	jsr     _init_variable_display
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #$03
+	jsr     pusha
+	lda     #$05
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_display_b16)
+	ldx     #>(__draw_ui_display_b16)
+	jsr     pushax
+	ldx     #$00
+	txa
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(_blue_pal_col)
+	ldx     #>(_blue_pal_col)
+	jsr     _init_variable_display
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$07
+	jsr     pusha
+	lda     #$05
+	jsr     pusha
+	lda     #$03
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #<(__draw_ui_slider)
+	ldx     #>(__draw_ui_slider)
+	jsr     pushax
+	lda     #<(_pal_edit_mouse_func)
+	ldx     #>(_pal_edit_mouse_func)
+	jsr     _create_ui_element
+	sta     _slider
+	jsr     pusha
+	lda     #$00
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #<(_red_pal_col)
+	ldx     #>(_red_pal_col)
+	jsr     _init_slider_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$07
+	jsr     pusha
+	lda     #$05
+	jsr     pusha
+	dea
+	jsr     pusha
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #<(__draw_ui_slider)
+	ldx     #>(__draw_ui_slider)
+	jsr     pushax
+	lda     #<(_pal_edit_mouse_func)
+	ldx     #>(_pal_edit_mouse_func)
+	jsr     _create_ui_element
+	sta     _slider
+	jsr     pusha
+	lda     #$00
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #<(_green_pal_col)
+	ldx     #>(_green_pal_col)
+	jsr     _init_slider_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$07
+	jsr     pusha
+	lda     #$05
+	jsr     pusha
+	jsr     pusha
+	dea
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #<(__draw_ui_slider)
+	ldx     #>(__draw_ui_slider)
+	jsr     pushax
+	lda     #<(_pal_edit_mouse_func)
+	ldx     #>(_pal_edit_mouse_func)
+	jsr     _create_ui_element
+	sta     _slider
+	jsr     pusha
+	lda     #$00
+	jsr     pusha
+	ina
+	jsr     pusha
+	lda     #<(_blue_pal_col)
+	ldx     #>(_blue_pal_col)
+	jsr     _init_slider_element
+	lda     _context_parent_id
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	lda     #$08
+	jsr     pusha
+	lda     #$06
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	jsr     pusha
+	lda     #<(__draw_ui_text)
+	ldx     #>(__draw_ui_text)
+	jsr     pushax
+	lda     #<(_return_from_pal_edit)
+	ldx     #>(_return_from_pal_edit)
+	jsr     _create_ui_element
+	sta     _text_id1
+	jsr     pusha
+	lda     #<(_check_text)
+	ldx     #>(_check_text)
+	jsr     _init_text_element
+	lda     __primary_colour
+	jsr     pusha
+	lda     #$01
+	jsr     pusha
+	ldx     #$50
+	dea
+	jsr     __render_colour_sprite
+	lda     #$08
+	jsr     pusha
+	ldx     #$0A
+	lda     #$80
+	jsr     pushax
+	lda     #$01
+	jsr     pusha
+	lda     #$F0
+	jsr     pusha0
+	lda     #$68
+	jsr     pusha0
+	lda     #$0C
+	jsr     pusha
+	lda     #$00
+	jsr     pusha
+	jsr     __set_sprite_attribute
+	lda     #$09
+	jsr     pusha
+	ldx     #$0A
+	lda     #$80
+	jsr     pushax
+	lda     #$01
+	jsr     pusha
+	lda     #$F0
+	jsr     pusha0
+	lda     #$70
+	jsr     pusha0
+	lda     #$0C
+	jsr     pusha
+	lda     #$00
+	jsr     pusha
+	jsr     __set_sprite_attribute
+	lda     #$0A
+	jsr     pusha
+	tax
+	lda     #$80
+	jsr     pushax
+	lda     #$01
+	jsr     pusha
+	lda     #$F0
+	jsr     pusha0
+	lda     #$78
+	jsr     pusha0
+	lda     #$0C
+	jsr     pusha
+	lda     #$00
+	jsr     pusha
+	jsr     __set_sprite_attribute
+	jmp     incsp6
 
 .endproc
 

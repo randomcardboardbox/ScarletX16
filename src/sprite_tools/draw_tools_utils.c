@@ -6,6 +6,7 @@
 #include "../ui_utils.h"
 
 #include "brush_tool.h"
+#include "tool_globals.h"
 
 void draw_pixel_line_h(u8 x0, u8 y0, u8 x1, u8 y1, u8 col){
     u8 dx;
@@ -304,7 +305,7 @@ void draw_brush_circle(u8 cx, u8 cy, u8 radius, u8 col, u8 brush_size, u8 brush_
     }
 }
 
-u32 mouse_addrs[] = {0x16200, 0x16200, 0x16200, 0x16200, 0x16300, 0x16200, 0x16200, 0x16200};
+u32 mouse_addrs[] = {0x16200, 0x16200, 0x16200, 0x16200, 0x16300, 0x16200, 0x16200, 0x16200, 0x16000};
 
 u8 was_drawing_last_frame = 0;
 u8 old_pix_x = 0;
@@ -606,14 +607,37 @@ void set_pal_icon_sprites(){
         0b00001100, 0b0000, 15);
 }
 
+u8 double_click_timer = 0;
+u8 released_click = 0;
+u8 last_clicked_col = 0;
+u8 tool_before_pal_edit = 0;
 void palette_selection_handler(u16 mouse_x, u16 mouse_y, u8 mouse_buttons){
     u8 pal_x = (mouse_x-PAL_SPR_X)/PAL_SPR_WIDTH;
     u8 pal_y = (mouse_y-PAL_SPR_Y)/PAL_SPR_HEIGHT;
     u8 col = pal_x + pal_y*PAL_SPR_ROWS;
 
+    if(double_click_timer > 0) double_click_timer -= 1;
+
     if(col < (*bmx_no_pals)){
-        if(mouse_buttons & M_LEFT_BUT) set_colour(&_primary_colour, col);
-        else set_colour(&_secondary_colour, col);
+        if(mouse_buttons & M_LEFT_BUT) {
+            set_colour(&_primary_colour, col);
+            if(released_click==1 ){
+                if(double_click_timer > 0 && last_clicked_col == col){
+                    if(_current_tool != PAL_EDIT_TOOL) tool_before_pal_edit = _current_tool;
+                    _current_tool = PAL_EDIT_TOOL;
+                    redraw_tool_ui = 1;
+                    double_click_timer = 0;
+                }
+                else double_click_timer = 30;
+                last_clicked_col = col;
+
+                released_click = 0;
+            }
+        }
+        else {
+            released_click = 1;
+        }
+        if(mouse_buttons & M_RIGHT_BUT) set_colour(&_secondary_colour, col);
     }
 }
 
@@ -631,7 +655,15 @@ void tool_handler(){
     }
     else _set_sprite_address((0x16000>>5)+0x8000, 0);
 
-    if(mouse_buttons & M_LEFT_BUT || mouse_buttons & M_RIGHT_BUT){
+    if(mouse_x >= PAL_SPR_X && mouse_x < PAL_SPR_X+64 && mouse_y >= PAL_SPR_Y && mouse_y < PAL_SPR_Y+128){
+        palette_selection_handler(mouse_x, mouse_y, mouse_buttons);
+    }
+
+    if((!(mouse_buttons & M_LEFT_BUT)) && (!(mouse_buttons & M_RIGHT_BUT))){
+        enable_mouse_funcs = 1;
+    }
+
+    if((mouse_buttons & M_LEFT_BUT || mouse_buttons & M_RIGHT_BUT)){
         if(mouse_x >= 96 && mouse_x < 224 && mouse_y >= 40 && mouse_y < 168){
             mouse_x -= 96;
             mouse_y -= 40;
@@ -653,10 +685,6 @@ void tool_handler(){
         else{
             if(was_drawing_last_frame) add_new_history_node();
             was_drawing_last_frame = 0;
-            
-            if(mouse_x >= PAL_SPR_X && mouse_x < PAL_SPR_X+64 && mouse_y >= PAL_SPR_Y && mouse_y < PAL_SPR_Y+128){
-                palette_selection_handler(mouse_x, mouse_y, mouse_buttons);
-            }
         }
     }
     else{
