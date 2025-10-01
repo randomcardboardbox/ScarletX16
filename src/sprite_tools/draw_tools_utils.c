@@ -320,6 +320,7 @@ void draw_pixel_to_sprite(u8 pix_x, u8 pix_y, u8 mouse_buttons){
 
     if(was_drawing_last_frame) draw_brush_line(old_pix_x, old_pix_y, pix_x, pix_y, col, brush_size, brush_type);
     else draw_brush_to_sprite(pix_x, pix_y, col, brush_size, brush_type, 1);
+    add_new_history_node();
 
     was_drawing_last_frame = 1;
 }

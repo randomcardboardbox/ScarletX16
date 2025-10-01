@@ -848,11 +848,73 @@ __draw_row_to_render_queue:
 
 
 
+
 START_X = ZP_PTR_1
 WIDTH = ZP_PTR_2
 END_ROW_Y = ZP_PTR_4
 ROW_COL = ZP_PTR_5
 PIX_ADDR_INT = ZP_PTR_6
+__add_history_node_row_internal:
+    ; writing initial row data
+        lda WIDTH
+        jsr __write_history_byte
+        lda START_X
+        jsr __write_history_byte
+        tya
+        jsr __write_history_byte
+        lda ROW_COL
+        jsr __write_history_byte
+
+    ; write row colour data
+        ; set up the vera data port
+            stz HIS_PIX_ADDR+1
+            tya
+            sta HIS_PIX_ADDR
+            ldx __x_axis
+
+            @multiply_height:
+                asl HIS_PIX_ADDR
+                rol HIS_PIX_ADDR+1
+            dex
+            bne @multiply_height
+
+            lda HIS_PIX_ADDR
+            clc
+            adc START_X
+            sta HIS_PIX_ADDR
+            lda HIS_PIX_ADDR+1
+            adc #0
+            sta HIS_PIX_ADDR+1
+
+            stz VERA_ctrl
+            lda HIS_PIX_ADDR
+            clc
+            adc #(<SPRITE_VRAM_DATA_ADDR)
+            sta VERA_addr_low
+            lda HIS_PIX_ADDR+1
+            adc #(>SPRITE_VRAM_DATA_ADDR)
+            sta VERA_addr_high
+            lda #(%00010000)
+            sta VERA_addr_bank
+
+        ; transfer pixel data from vera to stack
+            ldx WIDTH
+            @row_loop:
+                lda VERA_data0
+                jsr __write_history_byte
+            dex
+            bne @row_loop
+    
+    ; writing final row data
+        lda START_X
+        jsr __write_history_byte
+        tya
+        jsr __write_history_byte
+        lda WIDTH
+        jsr __write_history_byte
+
+    rts
+
 __draw_row_to_sprite_internal:
     stz PIX_ADDR_INT+1
     sty PIX_ADDR_INT
@@ -903,10 +965,10 @@ __draw_render_queue_to_sprite:
     inc sp
     sta ROW_COL
 
-    lda #RENDER_QUEUE_BANK
-    sta RAM_BANK_SEL
-
     @row_loop:
+        lda #RENDER_QUEUE_BANK
+        sta RAM_BANK_SEL
+
         lda RENDER_QUEUE_ADDR_END,y
         sec 
         sbc RENDER_QUEUE_ADDR_SRT,y
@@ -916,6 +978,7 @@ __draw_render_queue_to_sprite:
         sta START_X
 
         jsr __draw_row_to_sprite_internal
+        jsr __add_history_node_row_internal
 
     iny
     cpy END_ROW_Y
@@ -928,7 +991,7 @@ ROW_LENGTH = ZP_PTR_1
 X_POS = ZP_PTR_2
 Y_POS = ZP_PTR_3
 COLOUR = ZP_PTR_4
-HIS_PIX_ADDR = ZP_PTR_5
+HIS_PIX_ADDR = ZP_PTR_7
 __add_history_node_row:
     sta COLOUR
     lda(sp)

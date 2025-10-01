@@ -234,7 +234,8 @@ L0004:	ldy     #$03
 	jsr     pusha
 	lda     #$01
 	jsr     _draw_brush_to_sprite
-L0005:	lda     #$01
+L0005:	jsr     _add_new_history_node
+	lda     #$01
 	sta     _was_drawing_last_frame
 	jmp     incsp4
 

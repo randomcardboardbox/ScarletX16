@@ -129,8 +129,8 @@ void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u
                     row_width -= (start_x+row_width) - (i16)(*bmx_height);
                     if(row_width <= 0) continue;
                 }
-                // add_history_node_row((width<<1)-1, x-width, y+i-radius, colour);
-                // add_history_node_row((width<<1)-1, x-width, y+radius-i-2, colour);
+                add_history_node_row((width<<1)-1, x-width, y+i-radius, colour);
+                add_history_node_row((width<<1)-1, x-width, y+radius-i-2, colour);
 
                 if(start_y1+i > 0 && start_y1+i < (*bmx_height)) _draw_row_to_sprite(colour, row_width, start_x, start_y1+i);
                 if(start_y1+i > 0 && start_y1+i < (*bmx_height)) _draw_row_to_sprite(colour, row_width, start_x, start_y2-i);
@@ -156,8 +156,8 @@ void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u
                     row_width -= (start_x+row_width) - (i16)(*bmx_height);
                     if(row_width <= 0) continue;
                 }
-                // _add_history_node_row((width<<1), x-width, y+i-radius, colour);
-                // _add_history_node_row((width<<1), x-width, y+radius-i-1, colour);
+                _add_history_node_row((width<<1), x-width, y+i-radius, colour);
+                _add_history_node_row((width<<1), x-width, y+radius-i-1, colour);
 
                 if(start_y1+i >= 0 && start_y1+i < (*bmx_height)) {
                     _draw_row_to_sprite(colour, row_width, start_x, start_y1+i);
@@ -186,7 +186,7 @@ void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u
         }
 
         for(i=0; i<brush_size; i++){
-            // _add_history_node_row(width, start_x, start_y+i, colour);
+            _add_history_node_row(width, start_x, start_y+i, colour);
             if(start_y+i >= (i16)(*bmx_height)) break;
             if(start_y+i >= (i16)0){
                 _draw_row_to_sprite(colour, width, start_x, start_y+i);

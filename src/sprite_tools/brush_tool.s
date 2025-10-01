@@ -22,6 +22,8 @@
 	.import		__draw_row_to_screen
 	.import		__draw_row_to_sprite
 	.import		__draw_column_to_sprite
+	.import		__add_history_node_row
+	.import		_add_history_node_row
 	.export		_row_widths
 	.export		_brush_ptrs
 
@@ -336,7 +338,77 @@ L000B:	ldx     #$00
 	sta     (sp)
 	lda     (sp)
 	jeq     L0008
-L000D:	ldy     #$09
+L000D:	ldy     #$0A
+	lda     (sp),y
+	asl     a
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$14
+	lda     (sp),y
+	sec
+	ldy     #$0B
+	sbc     (sp),y
+	pha
+	lda     #$00
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$14
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$0A
+	lda     (sp),y
+	clc
+	adc     ptr1
+	sec
+	ldy     #$0F
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$14
+	lda     (sp),y
+	jsr     _add_history_node_row
+	ldy     #$0A
+	lda     (sp),y
+	asl     a
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$14
+	ldx     #$00
+	lda     (sp),y
+	sec
+	ldy     #$0B
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0F
+	lda     (sp),y
+	clc
+	ldy     #$14
+	adc     (sp),y
+	bcc     L003C
+	inx
+L003C:	sec
+	ldy     #$0A
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	sec
+	sbc     #$02
+	jsr     pusha
+	ldy     #$14
+	lda     (sp),y
+	jsr     _add_history_node_row
+	ldy     #$09
 	jsr     ldaxysp
 	clc
 	ldy     #$05
@@ -457,18 +529,18 @@ L0005:	ldy     #$0B
 	ldy     #$06
 	sbc     (sp),y
 	ldx     #$00
-	bcs     L003B
+	bcs     L003D
 	dex
-L003B:	jsr     pushax
+L003D:	jsr     pushax
 	ldx     #$00
 	ldy     #$08
 	lda     (sp),y
 	clc
 	ldy     #$0D
 	adc     (sp),y
-	bcc     L003C
+	bcc     L003E
 	inx
-L003C:	jsr     decax1
+L003E:	jsr     decax1
 	jsr     pushax
 	jsr     decsp4
 	ldx     #$00
@@ -481,9 +553,9 @@ L0019:	ldy     #$0A
 	cmp     (sp),y
 	txa
 	sbc     #$00
-	bvc     L003D
+	bvc     L003F
 	eor     #$80
-L003D:	jpl     L001A
+L003F:	jpl     L001A
 	dey
 	lda     (sp),y
 	tay
@@ -571,7 +643,73 @@ L001E:	jsr     ldax0sp
 	bvc     L0021
 	eor     #$80
 L0021:	jmi     L001B
-L0020:	ldy     #$0A
+L0020:	ldy     #$0B
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$15
+	lda     (sp),y
+	sec
+	ldy     #$0C
+	sbc     (sp),y
+	pha
+	lda     #$00
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$15
+	lda     (sp),y
+	sta     ptr1
+	ldy     #$0B
+	lda     (sp),y
+	clc
+	adc     ptr1
+	sec
+	ldy     #$10
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$15
+	lda     (sp),y
+	jsr     __add_history_node_row
+	ldy     #$0B
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$15
+	ldx     #$00
+	lda     (sp),y
+	sec
+	ldy     #$0C
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$10
+	lda     (sp),y
+	clc
+	ldy     #$15
+	adc     (sp),y
+	bcc     L0041
+	inx
+L0041:	sec
+	ldy     #$0B
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$15
+	lda     (sp),y
+	jsr     __add_history_node_row
+	ldy     #$0A
 	jsr     ldaxysp
 	clc
 	ldy     #$06
@@ -713,18 +851,18 @@ L002D:	jsr     asrax1
 	sec
 	sbc     (sp)
 	ldx     #$00
-	bcs     L003E
+	bcs     L0042
 	dex
-L003E:	jsr     pushax
+L0042:	jsr     pushax
 	ldy     #$09
 	lda     (sp),y
 	sec
 	ldy     #$02
 	sbc     (sp),y
 	ldx     #$00
-	bcs     L003F
+	bcs     L0043
 	dex
-L003F:	jsr     pushax
+L0043:	jsr     pushax
 	ldy     #$09
 	lda     (sp),y
 	jsr     pusha
@@ -742,7 +880,7 @@ L003F:	jsr     pushax
 	sec
 	ldy     #$0D
 	sbc     (sp),y
-	bra     L0049
+	bra     L004D
 L002E:	ldy     #$0A
 	lda     (sp),y
 	clc
@@ -777,7 +915,7 @@ L002E:	ldy     #$0A
 	ldx     _bmx_width+1
 	jsr     ldaxi
 	jsr     tossubax
-L0049:	eor     #$FF
+L004D:	eor     #$FF
 	sec
 	adc     (sp)
 	sta     (sp)
@@ -791,9 +929,28 @@ L0031:	ldy     #$07
 	cmp     (sp),y
 	txa
 	sbc     #$00
-	bvc     L0040
+	bvc     L0044
 	eor     #$80
-L0040:	jpl     L0032
+L0044:	jpl     L0032
+	lda     (sp)
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$09
+	jsr     ldaxysp
+	clc
+	ldy     #$03
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0E
+	lda     (sp),y
+	jsr     __add_history_node_row
 	ldy     #$07
 	jsr     ldaxysp
 	clc
