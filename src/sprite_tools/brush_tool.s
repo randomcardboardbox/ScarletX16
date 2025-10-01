@@ -11,10 +11,12 @@
 	.importzp	tmp1, tmp2, tmp3, tmp4, ptr1, ptr2, ptr3, ptr4
 	.macpack	longbranch
 	.export		_draw_brush_to_sprite
+	.export		_draw_brush_to_render_queue
 	.export		_draw_brush_left_hemisphere
 	.export		_draw_brush_right_hemisphere
 	.export		_draw_brush_lower_hemisphere
 	.export		_draw_brush_upper_hemisphere
+	.import		__draw_row_to_render_queue
 	.import		_bmx_width
 	.import		_bmx_height
 	.import		__draw_row_to_screen
@@ -859,6 +861,654 @@ L0033:	ldy     #$06
 	jmp     L0031
 L0032:	jsr     incsp8
 	jmp     incsp6
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ draw_brush_to_render_queue (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_brush_to_render_queue: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	lda     (sp)
+	jne     L0002
+	ldy     #$01
+	tax
+	lda     (sp),y
+	ina
+	bne     L0003
+	inx
+L0003:	jsr     asrax1
+	jsr     pusha
+	lda     (sp)
+	tay
+	lda     _brush_ptrs,y
+	jsr     pusha
+	jsr     decsp4
+	ldy     #$07
+	lda     (sp),y
+	and     #$01
+	jsr     pusha
+	lda     (sp)
+	jeq     L0005
+	ldy     #$0A
+	lda     (sp),y
+	sec
+	ldy     #$06
+	sbc     (sp),y
+	ldx     #$00
+	bcs     L0035
+	dex
+L0035:	jsr     pushax
+	ldx     #$00
+	ldy     #$08
+	lda     (sp),y
+	clc
+	ldy     #$0C
+	adc     (sp),y
+	bcc     L0036
+	inx
+L0036:	jsr     decax2
+	jsr     pushax
+	jsr     decsp3
+	ldx     #$00
+	txa
+	ldy     #$08
+	jsr     staxysp
+L0006:	ldy     #$09
+	jsr     ldaxysp
+	ldy     #$0D
+	cmp     (sp),y
+	txa
+	sbc     #$00
+	bvc     L0037
+	eor     #$80
+L0037:	jpl     L0007
+	dey
+	lda     (sp),y
+	tay
+	ldx     #$00
+	lda     _row_widths,y
+	ldy     #$0A
+	jsr     staxysp
+	ldy     #$0C
+	clc
+	lda     #$01
+	adc     (sp),y
+	sta     (sp),y
+	ldy     #$12
+	lda     (sp),y
+	sec
+	ldy     #$0A
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	tax
+	pla
+	ldy     #$01
+	jsr     staxysp
+	ldy     #$0A
+	lda     (sp),y
+	asl     a
+	sec
+	sbc     #$01
+	sta     (sp)
+	ldy     #$02
+	jsr     ldaxysp
+	cpx     #$80
+	bcc     L000B
+	ldx     #$00
+	txa
+	ldy     #$01
+	jsr     staxysp
+	ldy     #$0A
+	lda     (sp),y
+	sec
+	ldy     #$12
+	sbc     (sp),y
+	eor     #$FF
+	sec
+	adc     (sp)
+	sta     (sp)
+L000B:	ldx     #$00
+	lda     (sp)
+	clc
+	ldy     #$01
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tosicmp
+	bmi     L000D
+	ldx     #$00
+	lda     (sp)
+	clc
+	ldy     #$01
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tossubax
+	eor     #$FF
+	sec
+	adc     (sp)
+	sta     (sp)
+	lda     (sp)
+	jeq     L0008
+L000D:	ldy     #$09
+	jsr     ldaxysp
+	clc
+	ldy     #$05
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	cmp     #$01
+	txa
+	sbc     #$00
+	bvs     L000F
+	eor     #$80
+L000F:	bpl     L000E
+	ldy     #$09
+	jsr     ldaxysp
+	clc
+	ldy     #$05
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tosicmp
+	bcs     L000E
+	ldy     #$01
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	clc
+	iny
+	adc     (sp),y
+	jsr     pusha
+	ldy     #$0B
+	jsr     ldaxysp
+	clc
+	ldy     #$07
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	pla
+	jsr     __draw_row_to_render_queue
+L000E:	ldy     #$09
+	jsr     ldaxysp
+	clc
+	ldy     #$05
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	cmp     #$01
+	txa
+	sbc     #$00
+	bvs     L0014
+	eor     #$80
+L0014:	bpl     L0008
+	ldy     #$09
+	jsr     ldaxysp
+	clc
+	ldy     #$05
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tosicmp
+	bcs     L0008
+	ldy     #$01
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	clc
+	iny
+	adc     (sp),y
+	jsr     pusha
+	ldy     #$06
+	jsr     ldaxysp
+	sec
+	ldy     #$0A
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	jsr     __draw_row_to_render_queue
+L0008:	ldy     #$08
+	ldx     #$00
+	lda     #$01
+	jsr     addeqysp
+	jmp     L0006
+L0007:	jsr     incsp7
+	jmp     L0018
+L0005:	ldy     #$0A
+	lda     (sp),y
+	sec
+	ldy     #$06
+	sbc     (sp),y
+	ldx     #$00
+	bcs     L0038
+	dex
+L0038:	jsr     pushax
+	ldx     #$00
+	ldy     #$08
+	lda     (sp),y
+	clc
+	ldy     #$0C
+	adc     (sp),y
+	bcc     L0039
+	inx
+L0039:	jsr     decax1
+	jsr     pushax
+	jsr     decsp4
+	ldx     #$00
+	txa
+	ldy     #$09
+	jsr     staxysp
+L0019:	ldy     #$0A
+	jsr     ldaxysp
+	ldy     #$0E
+	cmp     (sp),y
+	txa
+	sbc     #$00
+	bvc     L003A
+	eor     #$80
+L003A:	jpl     L001A
+	dey
+	lda     (sp),y
+	tay
+	ldx     #$00
+	lda     _row_widths,y
+	ldy     #$0B
+	jsr     staxysp
+	ldy     #$0D
+	clc
+	lda     #$01
+	adc     (sp),y
+	sta     (sp),y
+	ldy     #$13
+	lda     (sp),y
+	sec
+	ldy     #$0B
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	tax
+	pla
+	ldy     #$02
+	jsr     staxysp
+	ldy     #$0C
+	jsr     ldaxysp
+	jsr     aslax1
+	jsr     stax0sp
+	ldy     #$03
+	jsr     ldaxysp
+	cpx     #$80
+	bcc     L001E
+	ldx     #$00
+	txa
+	ldy     #$02
+	jsr     staxysp
+	ldy     #$0C
+	jsr     ldaxysp
+	sec
+	ldy     #$13
+	sbc     (sp),y
+	pha
+	txa
+	sbc     #$00
+	tax
+	pla
+	jsr     subeq0sp
+L001E:	jsr     ldax0sp
+	clc
+	ldy     #$02
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tosicmp
+	bmi     L0020
+	jsr     ldax0sp
+	clc
+	ldy     #$02
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tossubax
+	jsr     subeq0sp
+	jsr     ldax0sp
+	cmp     #$01
+	txa
+	sbc     #$00
+	bvc     L0021
+	eor     #$80
+L0021:	jmi     L001B
+L0020:	ldy     #$0A
+	jsr     ldaxysp
+	clc
+	ldy     #$06
+	adc     (sp),y
+	txa
+	iny
+	adc     (sp),y
+	bmi     L0022
+	ldy     #$0A
+	jsr     ldaxysp
+	clc
+	ldy     #$06
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tosicmp
+	bcs     L0022
+	ldy     #$02
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$02
+	jsr     ldaxysp
+	clc
+	ldy     #$03
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$0C
+	jsr     ldaxysp
+	clc
+	ldy     #$08
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	pla
+	jsr     __draw_row_to_render_queue
+L0022:	ldy     #$05
+	jsr     ldaxysp
+	sec
+	ldy     #$09
+	sbc     (sp),y
+	txa
+	iny
+	sbc     (sp),y
+	bmi     L001B
+	ldy     #$05
+	jsr     ldaxysp
+	sec
+	ldy     #$09
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tosicmp
+	bcs     L001B
+	ldy     #$02
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$02
+	jsr     ldaxysp
+	clc
+	ldy     #$03
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	pla
+	jsr     pusha
+	ldy     #$07
+	jsr     ldaxysp
+	sec
+	ldy     #$0B
+	sbc     (sp),y
+	pha
+	txa
+	iny
+	sbc     (sp),y
+	pla
+	jsr     __draw_row_to_render_queue
+L001B:	ldy     #$09
+	ldx     #$00
+	lda     #$01
+	jsr     addeqysp
+	jmp     L0019
+L001A:	jsr     incsp8
+L0018:	jsr     incsp7
+	jmp     incsp5
+L0002:	jsr     decsp2
+	ldy     #$03
+	ldx     #$00
+	lda     (sp),y
+	ina
+	bne     L002B
+	inx
+L002B:	jsr     asrax1
+	jsr     pusha
+	ldy     #$07
+	lda     (sp),y
+	sec
+	sbc     (sp)
+	ldx     #$00
+	bcs     L003B
+	dex
+L003B:	jsr     pushax
+	ldy     #$08
+	lda     (sp),y
+	sec
+	ldy     #$02
+	sbc     (sp),y
+	ldx     #$00
+	bcs     L003C
+	dex
+L003C:	jsr     pushax
+	ldy     #$08
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$0C
+	lda     (sp),y
+	ldy     #$05
+	cmp     (sp),y
+	bcs     L002C
+	ldx     #$00
+	txa
+	ldy     #$03
+	jsr     staxysp
+	ldy     #$05
+	lda     (sp),y
+	sec
+	ldy     #$0C
+	sbc     (sp),y
+	bra     L0046
+L002C:	ldy     #$09
+	lda     (sp),y
+	clc
+	ldy     #$03
+	adc     (sp),y
+	pha
+	lda     #$00
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_width
+	ldx     _bmx_width+1
+	jsr     ldaxi
+	jsr     tosicmp
+	bcc     L002E
+	beq     L002E
+	ldy     #$09
+	lda     (sp),y
+	clc
+	ldy     #$03
+	adc     (sp),y
+	pha
+	lda     #$00
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_width
+	ldx     _bmx_width+1
+	jsr     ldaxi
+	jsr     tossubax
+L0046:	eor     #$FF
+	sec
+	adc     (sp)
+	sta     (sp)
+L002E:	ldx     #$00
+	txa
+	ldy     #$06
+	jsr     staxysp
+L002F:	ldy     #$07
+	jsr     ldaxysp
+	ldy     #$09
+	cmp     (sp),y
+	txa
+	sbc     #$00
+	bvc     L003D
+	eor     #$80
+L003D:	bpl     L0030
+	ldy     #$07
+	jsr     ldaxysp
+	clc
+	ldy     #$01
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	tax
+	pla
+	jsr     pushax
+	lda     _bmx_height
+	ldx     _bmx_height+1
+	jsr     ldaxi
+	jsr     tosicmp
+	bpl     L0030
+	ldy     #$07
+	jsr     ldaxysp
+	clc
+	ldy     #$01
+	adc     (sp),y
+	txa
+	iny
+	adc     (sp),y
+	bmi     L0031
+	iny
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	clc
+	ldy     #$04
+	adc     (sp),y
+	jsr     pusha
+	ldy     #$09
+	jsr     ldaxysp
+	clc
+	ldy     #$03
+	adc     (sp),y
+	pha
+	txa
+	iny
+	adc     (sp),y
+	pla
+	jsr     __draw_row_to_render_queue
+L0031:	ldy     #$06
+	ldx     #$00
+	lda     #$01
+	jsr     addeqysp
+	bra     L002F
+L0030:	jsr     incsp8
+	jmp     incsp5
 
 .endproc
 

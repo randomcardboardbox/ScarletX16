@@ -23,6 +23,7 @@
 	.import		_bmx_height
 	.import		__draw_canvas_to_screen
 	.import		__draw_row_to_sprite
+	.import		__get_pixel
 	.export		_node_start_pos1
 	.export		_node_start_pos2
 	.export		_starting_new_node
@@ -30,7 +31,6 @@
 	.export		_last_y
 	.export		_length_counter
 	.export		_curr_col
-	.export		_add_history_node_column
 
 .segment	"DATA"
 
@@ -146,6 +146,18 @@ L0006:	jmp     incsp3
 
 	jsr     pusha
 	jsr     decsp1
+	ldy     #$04
+	lda     (sp),y
+	jsr     __write_history_byte
+	ldy     #$03
+	lda     (sp),y
+	jsr     __write_history_byte
+	ldy     #$02
+	lda     (sp),y
+	jsr     __write_history_byte
+	ldy     #$01
+	lda     (sp),y
+	jsr     __write_history_byte
 	lda     #$00
 L0007:	sta     (sp)
 	ldy     #$04
@@ -158,15 +170,25 @@ L0007:	sta     (sp)
 	jsr     pusha
 	ldy     #$03
 	lda     (sp),y
+	jsr     __get_pixel
 	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	jsr     _add_history_node_position
+	lda     (sp)
+	jsr     __write_history_byte
+	jsr     incsp1
 	clc
 	lda     #$01
 	adc     (sp)
 	bra     L0007
-L0003:	jmp     incsp5
+L0003:	ldy     #$02
+	lda     (sp),y
+	jsr     __write_history_byte
+	ldy     #$03
+	lda     (sp),y
+	jsr     __write_history_byte
+	ldy     #$04
+	lda     (sp),y
+	jsr     __write_history_byte
+	jmp     incsp5
 
 .endproc
 
@@ -180,33 +202,8 @@ L0003:	jmp     incsp5
 
 .segment	"CODE"
 
-	jsr     decsp2
-	lda     _length_counter
-	jsr     __write_history_byte
-	lda     _node_start_pos1
-	ldx     _node_start_pos1+1
-	jsr     stax0sp
-	lda     _node_start_pos1+2
-	sta     $0000
-	jsr     ldax0sp
-	sta     ptr1
-	stx     ptr1+1
-	lda     _length_counter
-	sta     (ptr1)
-	lda     _node_start_pos2
-	ldx     _node_start_pos2+1
-	jsr     stax0sp
-	lda     _node_start_pos2+2
-	sta     $0000
-	jsr     ldax0sp
-	sta     ptr1
-	stx     ptr1+1
-	lda     _curr_col
-	sta     (ptr1)
-	stz     _length_counter
-	lda     #$01
-	sta     _starting_new_node
-	jmp     incsp2
+	lda     #$80
+	jmp     __write_history_byte
 
 .endproc
 
@@ -334,43 +331,6 @@ L0004:	jsr     __get_history_byte
 	jsr     __draw_canvas_to_screen
 	jmp     incsp2
 L0002:	rts
-
-.endproc
-
-; ---------------------------------------------------------------
-; void __near__ add_history_node_column (unsigned char height, unsigned char x, unsigned char y, unsigned char colour)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_add_history_node_column: near
-
-.segment	"CODE"
-
-	jsr     pusha
-	jsr     decsp1
-	lda     #$00
-L0007:	sta     (sp)
-	ldy     #$04
-	cmp     (sp),y
-	bcs     L0003
-	dey
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$01
-	lda     (sp),y
-	clc
-	ldy     #$03
-	adc     (sp),y
-	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	jsr     _add_history_node_position
-	clc
-	lda     #$01
-	adc     (sp)
-	bra     L0007
-L0003:	jmp     incsp5
 
 .endproc
 

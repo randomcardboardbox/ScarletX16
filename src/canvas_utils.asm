@@ -17,6 +17,7 @@
 .export __add_history_node_position
 .export __get_history_byte
 .export __get_history_redo_byte
+.export __add_history_node_row
 
 .export __square_root
 
@@ -32,6 +33,10 @@
 .export __sprite_vram_size
 .export __display_row_pow
 .export __display_has_columns
+
+.export __clear_render_queue
+.export __draw_row_to_render_queue
+.export __draw_render_queue_to_sprite
 
 .export __primary_colour
 .export __secondary_colour
@@ -81,7 +86,7 @@ __square_root:
    STA ROOT
    STA REM
    LDX #8
-@L1: SEC
+    @L1: SEC
    LDA NUM+1
    SBC #$40
    TAY
@@ -90,7 +95,7 @@ __square_root:
    BCC @L2
    STY NUM+1
    STA REM
-@L2: ROL ROOT
+    @L2: ROL ROOT
    ASL NUM
    ROL NUM+1
    ROL REM
@@ -113,6 +118,7 @@ __initialize_bmx_data:
     rts
 
 PIX_ADDR = ZP_PTR_1
+; u8 _get_pixel(u8 x, u8 y)
 __get_pixel:
     stz PIX_ADDR+1
     sta PIX_ADDR
@@ -780,6 +786,220 @@ __draw_row_to_screen:
         dec __history_stack_addr+2
     :
 .endmacro
+
+RENDER_QUEUE_ADDR_SRT = $A000
+RENDER_QUEUE_ADDR_END = $A200
+RENDER_QUEUE_BANK = 3
+
+; void __clear_render_queue(u8 end_y, u8 start_y)
+END_Y = ZP_PTR_1
+__clear_render_queue:
+    tax
+
+    lda (sp)
+    sta END_Y
+    inc sp
+
+    lda #RENDER_QUEUE_BANK
+    sta RAM_BANK_SEL
+
+    lda #($FF)
+    @clear_loop:
+        sta RENDER_QUEUE_ADDR_SRT, x
+        stz RENDER_QUEUE_ADDR_END, x
+
+    inx
+    cpx END_Y
+    bne @clear_loop
+
+    rts
+
+; void _draw_render_queue_to_sprite(u8 start_x, u8 end_x, u8 y)
+OLD_VAL = ZP_PTR_1
+__draw_row_to_render_queue:
+    tax
+
+    lda #RENDER_QUEUE_BANK
+    sta RAM_BANK_SEL
+
+    lda RENDER_QUEUE_ADDR_END, x
+    sta OLD_VAL
+
+    lda (sp)
+    inc sp
+
+    cmp OLD_VAL
+    bcc @skip_changing_end
+    sta RENDER_QUEUE_ADDR_END, x
+    @skip_changing_end:
+
+    lda RENDER_QUEUE_ADDR_SRT, x
+    sta OLD_VAL
+
+    lda (sp)
+    inc sp
+
+    cmp OLD_VAL
+    bcs @skip_changing_start
+    sta RENDER_QUEUE_ADDR_SRT, x
+    @skip_changing_start:
+
+    rts
+
+
+
+START_X = ZP_PTR_1
+WIDTH = ZP_PTR_2
+END_ROW_Y = ZP_PTR_4
+ROW_COL = ZP_PTR_5
+PIX_ADDR_INT = ZP_PTR_6
+__draw_row_to_sprite_internal:
+    stz PIX_ADDR_INT+1
+    sty PIX_ADDR_INT
+    ldx __x_axis
+
+    @multiply_height:
+        asl PIX_ADDR_INT
+        rol PIX_ADDR_INT+1
+    dex 
+    bne @multiply_height
+
+    lda PIX_ADDR_INT
+    clc
+    adc START_X
+    sta PIX_ADDR_INT
+    lda PIX_ADDR_INT+1
+    adc #0
+    sta PIX_ADDR_INT+1
+
+    stz VERA_ctrl
+    lda PIX_ADDR_INT
+    clc
+    adc #(<SPRITE_VRAM_DATA_ADDR)
+    sta VERA_addr_low
+    lda PIX_ADDR_INT+1
+    adc #(>SPRITE_VRAM_DATA_ADDR)
+    sta VERA_addr_high
+    lda #(%00010000)
+    sta VERA_addr_bank
+
+    ldx WIDTH
+    lda ROW_COL
+    @row_loop:
+        sta VERA_data0
+    dex
+    bne @row_loop
+
+    rts
+; void _draw_render_queue_to_sprite(u8 col, u8 end_y, u8 start_y)
+__draw_render_queue_to_sprite:
+    tay
+
+    lda (sp)
+    inc sp
+    sta END_ROW_Y
+
+    lda (sp)
+    inc sp
+    sta ROW_COL
+
+    lda #RENDER_QUEUE_BANK
+    sta RAM_BANK_SEL
+
+    @row_loop:
+        lda RENDER_QUEUE_ADDR_END,y
+        sec 
+        sbc RENDER_QUEUE_ADDR_SRT,y
+        sta WIDTH
+        
+        lda RENDER_QUEUE_ADDR_SRT,y
+        sta START_X
+
+        jsr __draw_row_to_sprite_internal
+
+    iny
+    cpy END_ROW_Y
+    bne @row_loop
+
+    rts
+
+; void _add_history_node_row(u8 width, u8 x, u8 y, u8 colour)
+ROW_LENGTH = ZP_PTR_1
+X_POS = ZP_PTR_2
+Y_POS = ZP_PTR_3
+COLOUR = ZP_PTR_4
+HIS_PIX_ADDR = ZP_PTR_5
+__add_history_node_row:
+    sta COLOUR
+    lda(sp)
+    sta Y_POS
+    inc sp
+    lda(sp)
+    sta X_POS
+    inc sp
+    lda(sp)
+    sta ROW_LENGTH
+    inc sp
+
+    ; writing initial row data
+        lda ROW_LENGTH
+        jsr __write_history_byte
+        lda X_POS
+        jsr __write_history_byte
+        lda Y_POS
+        jsr __write_history_byte
+        lda COLOUR
+        jsr __write_history_byte
+
+    ; write row colour data
+        ; set up the vera data port
+            stz HIS_PIX_ADDR+1
+            lda Y_POS
+            sta HIS_PIX_ADDR
+            ldy __x_axis
+
+            @multiply_height:
+                asl HIS_PIX_ADDR
+                rol HIS_PIX_ADDR+1
+            dey
+            bne @multiply_height
+
+            lda HIS_PIX_ADDR
+            clc
+            adc X_POS
+            sta HIS_PIX_ADDR
+            lda HIS_PIX_ADDR+1
+            adc #0
+            sta HIS_PIX_ADDR+1
+
+            stz VERA_ctrl
+            lda HIS_PIX_ADDR
+            clc
+            adc #(<SPRITE_VRAM_DATA_ADDR)
+            sta VERA_addr_low
+            lda HIS_PIX_ADDR+1
+            adc #(>SPRITE_VRAM_DATA_ADDR)
+            sta VERA_addr_high
+            lda #(%00010000)
+            sta VERA_addr_bank
+
+        ; transfer pixel data from vera to stack
+            ldy ROW_LENGTH
+            @row_loop:
+                lda VERA_data0
+                jsr __write_history_byte
+            dey
+            bne @row_loop
+    
+    ; writing final row data
+        lda X_POS
+        jsr __write_history_byte
+        lda Y_POS
+        jsr __write_history_byte
+        lda ROW_LENGTH
+        jsr __write_history_byte
+
+    rts
 
 __write_history_byte:
     pha

@@ -137,15 +137,16 @@ void draw_brush_line_h(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 bru
         y1 = temp;
     }
 
-    draw_brush_to_sprite(x0, y0, col, brush_size, brush_type, 0);
-    // draw_brush_left_hemisphere(x0, y0, col, brush_size, brush_type);
-
     dx = x1 - x0;
     dy = y1 - y0;
 
     if(y0 > y1){
         neg_y = 1;
         dy = y0 - y1;
+        _clear_render_queue(y0+(brush_size>>1), y1-(brush_size>>1));
+    }
+    else{
+        _clear_render_queue(y1+(brush_size>>1), y0-(brush_size>>1));
     }
 
     D = (dy*2) - dx;
@@ -153,8 +154,8 @@ void draw_brush_line_h(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 bru
     y = y0;
 
     for(x=x0; x<=x1; x++){
-        // draw_brush_right_hemisphere(x, y, col, brush_size, brush_type);
-        draw_brush_to_sprite(x, y, col, brush_size, brush_type, 0);
+        draw_brush_to_render_queue(x, y, col, brush_size, brush_type);
+        // draw_brush_to_sprite(x,y,col, brush_size, brush_type, 0);
 
         if(D > 0){
             if(neg_y) y -= 1;
@@ -165,15 +166,14 @@ void draw_brush_line_h(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 bru
         D += dy*2;
     }
 
-    draw_brush_to_sprite(x1, y1, col, brush_size, brush_type, 0);
-    // draw_brush_right_hemisphere(x1, y1, col, brush_size, brush_type);
-
     if(neg_y){
+         _draw_render_queue_to_sprite(col, y0+(brush_size>>1), y1-(brush_size>>1));
         for(i=0; i<(dy+brush_size+2); i++){
             _draw_row_to_screen(y1-(brush_size>>1)+i-1);
         }
     }
     else{
+        _draw_render_queue_to_sprite(col, y1+(brush_size>>1), y0-(brush_size>>1));
         for(i=0; i<(dy+brush_size+2); i++){
             _draw_row_to_screen(y0-(brush_size>>1)+i-1);
         }
@@ -199,9 +199,6 @@ void draw_brush_line_v(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 bru
         y1 = temp;
     }
 
-    // draw_brush_upper_hemisphere(x0, y0, col, brush_size, brush_type);
-    draw_brush_to_sprite(x0, y0, col, brush_size, brush_type, 0);
-
     dx = x1 - x0;
     dy = y1 - y0;
 
@@ -210,13 +207,15 @@ void draw_brush_line_v(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 bru
         dx = x0 - x1;
     }
 
+    _clear_render_queue(y1+(brush_size>>1), y0-(brush_size>>1));
+
     D = (dx*2) - dy;
     x = x0;
     y = y0;
 
     for(y=y0; y<=y1; y++){
-        draw_brush_to_sprite(x, y, col, brush_size, brush_type, 0);
-        // draw_brush_lower_hemisphere(x, y, col, brush_size, brush_type);
+        draw_brush_to_render_queue(x, y, col, brush_size, brush_type);
+        // draw_brush_to_sprite(x,y,col, brush_size, brush_type, 0);
 
         if(D > 0){
             if(neg_y) x -= 1;
@@ -227,8 +226,7 @@ void draw_brush_line_v(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 bru
         D += dx*2;
     }
 
-    // draw_brush_lower_hemisphere(x1, y1, col, brush_size, brush_type);
-    draw_brush_to_sprite(x1, y1, col, brush_size, brush_type, 0);
+    _draw_render_queue_to_sprite(col, y1+(brush_size>>1), y0-(brush_size>>1));
 
     for(i=0; i<brush_size+dy+2; i++){
         _draw_row_to_screen(y0-(brush_size>>1)+i-1);
@@ -403,8 +401,8 @@ void flood_fill(u8 pix_x, u8 pix_y, u8 mouse_buttons){
     add_new_history_node();
 }
 
-u8 line_brush_size = 4;
-u8 line_brush_type = 1;
+u8 line_brush_size = 16;
+u8 line_brush_type = 0;
 u8 point_selected = 0;
 u8 previous_point_x;
 u8 previous_point_y;

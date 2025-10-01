@@ -38,32 +38,23 @@ void add_history_node_position(u8 x, u8 y, u8 colour){
 
 void add_history_node_row(u8 width, u8 x, u8 y, u8 colour){
     u8 i;
-    for(i=0; i<width; i++){
-        add_history_node_position(x+i,y,colour);
-    }
-}
+    _write_history_byte(width);
+    _write_history_byte(x);
+    _write_history_byte(y);
+    _write_history_byte(colour);
 
-void add_history_node_column(u8 height, u8 x, u8 y, u8 colour){
-    u8 i;
-    for(i=0; i<height; i++){
-        add_history_node_position(x,y+i,colour);
+    for(i=0; i<width; i++){
+        u8 curr_pix = _get_pixel(x+i, y);
+        _write_history_byte(curr_pix);
     }
+
+    _write_history_byte(y);
+    _write_history_byte(x);
+    _write_history_byte(width);
 }
 
 void add_new_history_node(){
-    u8 *addr;    
-    _write_history_byte(length_counter);
-
-    addr = node_start_pos1;
-    RAM_BANK_SEL = (node_start_pos1>>16);
-    *addr = length_counter;
-
-    addr = node_start_pos2;
-    RAM_BANK_SEL = (node_start_pos2>>16);
-    *addr = curr_col;
-
-    length_counter = 0;
-    starting_new_node = 1;
+    _write_history_byte(0b10000000);
 }
 
 void restore_last_history_node(){
