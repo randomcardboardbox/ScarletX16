@@ -22,23 +22,14 @@
 	.import		_keycode
 	.import		__initialize_mouse
 	.import		__get_mouse_input
-	.import		__draw_ui_element
-	.import		__update_ui_element_position
-	.import		_update_ui_elements_from_ptr
-	.import		__clear_ui_layer
-	.import		__init_overlay_display
-	.import		__clear_overlay_display
-	.import		_overlay_routines
 	.import		_set_layer_config
-	.import		_initialize_paint_ui
 	.import		_change_tool
 	.import		__current_tool
 	.import		_bmx_vera_bit_depth
 	.import		_bmx_width
 	.import		_bmx_height
 	.import		_bmx_no_pals
-	.import		__draw_canvas_to_screen
-	.import		__render_palette_sprites
+	.import		__draw_bitmap_canvas_to_screen
 	.import		__transfer_pal_to_vera
 	.import		__transfer_sprite_to_vram
 	.export		_handle_keyboard_input
@@ -46,9 +37,6 @@
 	.import		_init_canvas_vera_sprites
 	.import		_restore_last_history_node
 	.import		_undo_last_history_node
-	.import		_tool_handler
-	.import		_set_pal_icon_sprites
-	.import		_tool_ui_handler
 	.export		_filename
 	.export		_load_bmx_file
 	.export		_save_bmx_file
@@ -109,9 +97,12 @@ L000B:	rts
 
 .segment	"CODE"
 
-	ldx     #$80
-	lda     #$00
-	jsr     pushax
+	stz     sreg+1
+	lda     #$01
+	sta     sreg
+	dea
+	ldx     #$40
+	jsr     pusheax
 	lda     #$02
 	jsr     pusha
 	lda     #$0F
@@ -194,14 +185,18 @@ L000C:	lda     #$0F
 	ldx     #$20
 	lda     #$00
 	jsr     pushax
-	ldy     #$06
+	ina
+	jsr     pusha
+	ldy     #$07
 	jsr     pushwysp
 	lda     #$00
 	jsr     __transfer_sprite_to_vram
-	ldy     #$01
-	ldx     #$20
 	lda     #$00
-	jsr     addeqysp
+	stz     sreg+1
+	stz     sreg
+	ldx     #$20
+	ldy     #$01
+	jsr     laddeqysp
 	clc
 	lda     #$01
 	adc     (sp)
@@ -234,13 +229,15 @@ L000D:	lda     #$0F
 	lda     __image_data_size
 	ldx     __image_data_size+1
 	jsr     pushax
-	ldy     #$06
+	lda     #$01
+	jsr     pusha
+	ldy     #$07
 	jsr     pushwysp
 	lda     #$00
 	jsr     __transfer_sprite_to_vram
 	lda     #$0F
 	jsr     _cbm_close
-	jmp     incsp3
+	jmp     incsp5
 
 .endproc
 
@@ -282,21 +279,9 @@ L000D:	lda     #$0F
 	jsr     __init_screen_mode
 	jsr     _set_layer_config
 	jsr     __initialize_mouse
-	jsr     _initialize_paint_ui
 	jsr     _load_bmx_file
 	jsr     _init_canvas_vera_sprites
-	jsr     __render_palette_sprites
-	ldx     #$00
-	txa
-	jsr     __clear_ui_layer
-	jsr     __init_overlay_display
-	jsr     __clear_overlay_display
-	lda     #$00
-	jsr     __update_ui_element_position
-	lda     #$00
-	jsr     __draw_ui_element
-	jsr     __draw_canvas_to_screen
-	jsr     _set_pal_icon_sprites
+	jsr     __draw_bitmap_canvas_to_screen
 	stz     $0056+3
 	lda     #$04
 	sta     $0056+2
@@ -305,14 +290,10 @@ L000D:	lda     #$0F
 	stz     $0056
 	stz     __current_tool
 L0002:	jsr     __wait_for_nmi
-	jsr     _overlay_routines
 	jsr     __get_mouse_input
 	jsr     _parse_mouse_input
 	jsr     _get_keycode
 	jsr     _handle_keyboard_input
-	jsr     _tool_handler
-	jsr     _tool_ui_handler
-	jsr     _update_ui_elements_from_ptr
 	bra     L0002
 
 .endproc

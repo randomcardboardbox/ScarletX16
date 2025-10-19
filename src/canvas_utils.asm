@@ -44,15 +44,6 @@
 
 .export __history_stack_addr
 
-_bmx_header = GOLD_RAM
-_bmx_bit_depth = GOLD_RAM+4
-_bmx_vera_bit_depth = GOLD_RAM+5
-_bmx_width = GOLD_RAM+6
-_bmx_height = GOLD_RAM+8
-_bmx_no_pals = GOLD_RAM+10
-_bmx_pal_start = GOLD_RAM+11
-_bmx_data_start = GOLD_RAM+12
-
 __x_axis: .byte $00
 __y_axis: .byte $00
 __canvas_scale: .byte $00
@@ -263,7 +254,9 @@ __transfer_sprite_to_vram:
     lda (sp)
     inc sp
     sta VERA_addr_high
-    lda #(%00010000)
+    lda (sp)
+    inc sp
+    ora #(%00010000)
     sta VERA_addr_bank
 
     lda (sp)
@@ -978,7 +971,7 @@ __draw_render_queue_to_sprite:
         sta START_X
 
         jsr __draw_row_to_sprite_internal
-        jsr __add_history_node_row_internal
+        ; jsr __add_history_node_row_internal
 
     iny
     cpy END_ROW_Y

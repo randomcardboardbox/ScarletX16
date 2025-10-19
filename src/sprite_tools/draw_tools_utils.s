@@ -38,9 +38,6 @@
 	.import		_keycode
 	.import		_enable_mouse_funcs
 	.import		_draw_brush_to_sprite
-	.import		_draw_brush_to_render_queue
-	.import		__clear_render_queue
-	.import		__draw_render_queue_to_sprite
 	.export		_brush_size
 	.export		_brush_type
 	.export		_previous_point_x
@@ -234,8 +231,7 @@ L0004:	ldy     #$03
 	jsr     pusha
 	lda     #$01
 	jsr     _draw_brush_to_sprite
-L0005:	jsr     _add_new_history_node
-	lda     #$01
+L0005:	lda     #$01
 	sta     _was_drawing_last_frame
 	jmp     incsp4
 
@@ -1681,8 +1677,8 @@ L0005:	ldy     #$0C
 	lda     (sp),y
 	ldy     #$0C
 	cmp     (sp),y
-	bcc     L0029
-	beq     L0029
+	bcc     L0024
+	beq     L0024
 	ldy     #$0E
 	lda     (sp),y
 	jsr     pusha
@@ -1704,7 +1700,7 @@ L0005:	ldy     #$0C
 	ldy     #$0C
 	sta     (sp),y
 	jsr     incsp1
-L0029:	lda     (sp),y
+L0024:	lda     (sp),y
 	sec
 	ldy     #$0E
 	sbc     (sp),y
@@ -1721,8 +1717,8 @@ L0029:	lda     (sp),y
 	lda     (sp),y
 	ldy     #$0B
 	cmp     (sp),y
-	bcc     L002D
-	beq     L002D
+	bcc     L0003
+	beq     L0003
 	lda     #$01
 	ldy     #$03
 	sta     (sp),y
@@ -1733,31 +1729,7 @@ L0029:	lda     (sp),y
 	sbc     (sp),y
 	ldy     #$06
 	sta     (sp),y
-	ldy     #$09
-	lda     (sp),y
-	lsr     a
-	clc
-	ldy     #$0D
-	adc     (sp),y
-	jsr     pusha
-	ldy     #$0C
-	bra     L0034
-L002D:	ldy     #$09
-	lda     (sp),y
-	lsr     a
-	clc
-	ldy     #$0B
-	adc     (sp),y
-	jsr     pusha
-	ldy     #$0E
-L0034:	lda     (sp),y
-	jsr     pusha0
-	ldy     #$0C
-	lda     (sp),y
-	lsr     a
-	jsr     tossuba0
-	jsr     __clear_render_queue
-	ldy     #$06
+L0003:	ldy     #$06
 	ldx     #$00
 	lda     (sp),y
 	asl     a
@@ -1784,12 +1756,12 @@ L0017:	sec
 	ldy     #$0E
 	lda     (sp),y
 	ldy     #$01
-L0024:	sta     (sp),y
+L001F:	sta     (sp),y
 	ldy     #$0C
 	cmp     (sp),y
-	beq     L0027
+	beq     L0022
 	bcs     L0006
-L0027:	ldy     #$01
+L0022:	ldy     #$01
 	lda     (sp),y
 	jsr     pusha
 	ldy     #$03
@@ -1803,7 +1775,9 @@ L0027:	ldy     #$01
 	jsr     pusha
 	ldy     #$0C
 	lda     (sp),y
-	jsr     _draw_brush_to_render_queue
+	jsr     pusha
+	lda     #$00
+	jsr     _draw_brush_to_sprite
 	ldy     #$05
 	jsr     ldaxysp
 	cmp     #$01
@@ -1819,12 +1793,12 @@ L000A:	bpl     L0009
 	lda     (sp),y
 	sec
 	sbc     #$01
-	bra     L0023
+	bra     L001E
 L000B:	dey
 	clc
 	ina
 	adc     (sp),y
-L0023:	sta     (sp),y
+L001E:	sta     (sp),y
 	ldy     #$07
 	ldx     #$00
 	lda     (sp),y
@@ -1845,30 +1819,12 @@ L0019:	ldy     #$04
 	clc
 	tya
 	adc     (sp),y
-	bra     L0024
+	bra     L001F
 L0006:	ldy     #$03
 	lda     (sp),y
-	beq     L000D
-	ldy     #$0A
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$0A
-	lda     (sp),y
-	lsr     a
-	clc
-	ldy     #$0E
-	adc     (sp),y
-	jsr     pusha
-	ldy     #$0D
-	lda     (sp),y
-	jsr     pusha0
-	ldy     #$0D
-	lda     (sp),y
-	lsr     a
-	jsr     tossuba0
-	jsr     __draw_render_queue_to_sprite
+	beq     L0021
 	lda     #$00
-L0025:	sta     (sp)
+L0020:	sta     (sp)
 	lda     (sp)
 	jsr     pusha0
 	ldy     #$0B
@@ -1876,11 +1832,11 @@ L0025:	sta     (sp)
 	clc
 	ldy     #$08
 	adc     (sp),y
-	bcc     L001D
+	bcc     L001A
 	inx
-L001D:	jsr     incax2
+L001A:	jsr     incax2
 	jsr     tosicmp
-	jpl     L0014
+	bpl     L0014
 	ldy     #$0B
 	lda     (sp),y
 	jsr     pusha0
@@ -1898,27 +1854,8 @@ L001D:	jsr     incax2
 	clc
 	lda     #$01
 	adc     (sp)
-	bra     L0025
-L000D:	ldy     #$0A
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$0A
-	lda     (sp),y
-	lsr     a
-	clc
-	ldy     #$0C
-	adc     (sp),y
-	jsr     pusha
-	ldy     #$0F
-	lda     (sp),y
-	jsr     pusha0
-	ldy     #$0D
-	lda     (sp),y
-	lsr     a
-	jsr     tossuba0
-	jsr     __draw_render_queue_to_sprite
-	lda     #$00
-L0026:	sta     (sp)
+	bra     L0020
+L0021:	sta     (sp)
 	lda     (sp)
 	jsr     pusha0
 	ldy     #$0B
@@ -1926,9 +1863,9 @@ L0026:	sta     (sp)
 	clc
 	ldy     #$08
 	adc     (sp),y
-	bcc     L0020
+	bcc     L001C
 	inx
-L0020:	jsr     incax2
+L001C:	jsr     incax2
 	jsr     tosicmp
 	bpl     L0014
 	ldy     #$0D
@@ -1948,7 +1885,7 @@ L0020:	jsr     incax2
 	clc
 	lda     #$01
 	adc     (sp)
-	bra     L0026
+	bra     L0021
 L0014:	ldy     #$0F
 	jmp     addysp
 
@@ -2026,22 +1963,7 @@ L0002:	ldy     #$0C
 	sbc     (sp),y
 	ldy     #$07
 	sta     (sp),y
-L0003:	ldy     #$09
-	lda     (sp),y
-	lsr     a
-	clc
-	ldy     #$0B
-	adc     (sp),y
-	jsr     pusha
-	ldy     #$0E
-	lda     (sp),y
-	jsr     pusha0
-	ldy     #$0C
-	lda     (sp),y
-	lsr     a
-	jsr     tossuba0
-	jsr     __clear_render_queue
-	ldy     #$07
+L0003:	ldy     #$07
 	ldx     #$00
 	lda     (sp),y
 	asl     a
@@ -2068,12 +1990,12 @@ L0010:	sec
 	ldy     #$0D
 	lda     (sp),y
 	ldy     #$02
-L0018:	sta     (sp),y
+L0016:	sta     (sp),y
 	ldy     #$0B
 	cmp     (sp),y
-	beq     L001A
-	bcs     L0005
-L001A:	ldy     #$01
+	beq     L0018
+	bcs     L0019
+L0018:	ldy     #$01
 	lda     (sp),y
 	jsr     pusha
 	ldy     #$03
@@ -2087,7 +2009,9 @@ L001A:	ldy     #$01
 	jsr     pusha
 	ldy     #$0C
 	lda     (sp),y
-	jsr     _draw_brush_to_render_queue
+	jsr     pusha
+	lda     #$00
+	jsr     _draw_brush_to_sprite
 	ldy     #$05
 	jsr     ldaxysp
 	cmp     #$01
@@ -2103,12 +2027,12 @@ L0009:	bpl     L0008
 	lda     (sp),y
 	sec
 	sbc     #$01
-	bra     L0017
+	bra     L0015
 L000A:	ldy     #$01
 	clc
 	tya
 	adc     (sp),y
-L0017:	sta     (sp),y
+L0015:	sta     (sp),y
 	ldy     #$06
 	ldx     #$00
 	lda     (sp),y
@@ -2129,27 +2053,9 @@ L0012:	ldy     #$04
 	clc
 	lda     #$01
 	adc     (sp),y
-	bra     L0018
-L0005:	dey
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$0A
-	lda     (sp),y
-	lsr     a
-	clc
-	ldy     #$0C
-	adc     (sp),y
-	jsr     pusha
-	ldy     #$0F
-	lda     (sp),y
-	jsr     pusha0
-	ldy     #$0D
-	lda     (sp),y
-	lsr     a
-	jsr     tossuba0
-	jsr     __draw_render_queue_to_sprite
-	lda     #$00
-L0019:	sta     (sp)
+	jmp     L0016
+L0019:	lda     #$00
+L0017:	sta     (sp)
 	lda     (sp)
 	jsr     pusha0
 	ldy     #$08
@@ -2157,9 +2063,9 @@ L0019:	sta     (sp)
 	clc
 	ldy     #$0B
 	adc     (sp),y
-	bcc     L0015
+	bcc     L0013
 	inx
-L0015:	jsr     incax2
+L0013:	jsr     incax2
 	jsr     tosicmp
 	bpl     L000D
 	ldy     #$0D
@@ -2179,7 +2085,7 @@ L0015:	jsr     incax2
 	clc
 	lda     #$01
 	adc     (sp)
-	bra     L0019
+	bra     L0017
 L000D:	ldy     #$0F
 	jmp     addysp
 
@@ -2605,7 +2511,6 @@ L0008:	stz     _point_selected
 	jsr     pusha
 	lda     _line_brush_type
 	jsr     _draw_brush_line
-	jsr     _add_new_history_node
 	jmp     incsp4
 
 .endproc

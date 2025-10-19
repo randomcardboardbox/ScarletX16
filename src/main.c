@@ -19,7 +19,7 @@
 #define MODE 0
 char filename[] = "dripzero.bmx";
 void load_bmx_file(){
-    u16 vram_addr = SPRITE_VRAM_DATA_ADDR;
+    u32 vram_addr = SPRITE_VRAM_DATA_ADDR;
     u8 ram_bank = 2;
     cbm_open(LFN, DEVICE, SA, filename);
     cbm_read(LFN, GOLD_RAM_ADDR, 32);
@@ -35,7 +35,7 @@ void load_bmx_file(){
     _image_data_size = ((*bmx_width)*(*bmx_height)) >> (3- (*bmx_vera_bit_depth));
     while(_image_data_size > 0x2000){
         cbm_read(LFN, RAM_BANK_ADDR, 0x2000);
-        _transfer_sprite_to_vram(0x2000, vram_addr, 0);
+        _transfer_sprite_to_vram(0x2000, 1, vram_addr, 0);
         vram_addr += 0x2000;
         ram_bank += 1;
         RAM_BANK_SEL = ram_bank;
@@ -48,7 +48,7 @@ void load_bmx_file(){
     }
 
     cbm_read(LFN, RAM_BANK_ADDR, _image_data_size);
-    _transfer_sprite_to_vram(_image_data_size, vram_addr, 0);
+    _transfer_sprite_to_vram(_image_data_size, 1, vram_addr, 0);
 
     cbm_close(LFN);
 }
@@ -81,20 +81,20 @@ int main(){
     _init_screen_mode();
     set_layer_config();
     _initialize_mouse();
-    initialize_paint_ui();
+    // initialize_paint_ui();
     
     load_bmx_file();
     init_canvas_vera_sprites();
-    _render_palette_sprites();
+    // _render_palette_sprites();
 
-    _clear_ui_layer(0x10000);
-    _init_overlay_display();
-    _clear_overlay_display();
-    _update_ui_element_position(0);
-    _draw_ui_element(0);
+    // _clear_ui_layer(0x10000);
+    // _init_overlay_display();
+    // _clear_overlay_display();
+    // _update_ui_element_position(0);
+    // _draw_ui_element(0);
     
-    _draw_canvas_to_screen();
-    set_pal_icon_sprites();
+    _draw_bitmap_canvas_to_screen();
+    // set_pal_icon_sprites();
 
     HIS_STACK_ADDR = (u32)0x0004A000;
 
@@ -102,16 +102,16 @@ int main(){
 
     while(1){
         _wait_for_nmi();
-        overlay_routines();
+        // overlay_routines();
 
         _get_mouse_input();
         parse_mouse_input();
         get_keycode();
         handle_keyboard_input();
-        tool_handler();
-        tool_ui_handler();
+        // tool_handler();
+        // tool_ui_handler();
 
-        update_ui_elements_from_ptr();
+        // update_ui_elements_from_ptr();
     }
 }
 

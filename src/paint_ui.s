@@ -116,8 +116,15 @@ _context_container_id:
 	stz     $9F30+1
 	stz     $9F32
 	stz     $9F32+1
-	lda     #$21
+	lda     #$07
 	sta     $9F2D
+	stz     $9F2F
+	stz     $9F37
+	stz     $9F37+1
+	stz     $9F39
+	stz     $9F39+1
+	lda     #$21
+	sta     $9F34
 	lda     _tilemap0_addr+3
 	sta     sreg+1
 	lda     _tilemap0_addr+2
@@ -128,7 +135,7 @@ _context_container_id:
 	sty     sreg
 	stz     sreg+1
 	jsr     shreax1
-	sta     $9F2E
+	sta     $9F35
 	lda     _tileset0_addr+3
 	sta     sreg+1
 	lda     _tileset0_addr+2
@@ -140,7 +147,7 @@ _context_container_id:
 	stz     sreg+1
 	jsr     shreax1
 	and     #$FC
-	sta     $9F2F
+	sta     $9F36
 	rts
 
 .endproc

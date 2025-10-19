@@ -83,6 +83,15 @@ ZP_PTR_9          = $50
 ZP_PTR_10          = $52
 ZP_PTR_11          = $54
 
+_bmx_header = GOLD_RAM
+_bmx_bit_depth = GOLD_RAM+4
+_bmx_vera_bit_depth = GOLD_RAM+5
+_bmx_width = GOLD_RAM+6
+_bmx_height = GOLD_RAM+8
+_bmx_no_pals = GOLD_RAM+10
+_bmx_pal_start = GOLD_RAM+11
+_bmx_data_start = GOLD_RAM+12
+
 __history_stack_addr = $56
 
 
