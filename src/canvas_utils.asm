@@ -3,6 +3,7 @@
 
 .export __initialize_bmx_data
 .export __transfer_sprite_to_vram
+.export __init_canvas_vera_tiles
 .export __draw_canvas_to_screen
 .export __render_palette_sprites
 .export __render_colour_sprite
@@ -240,52 +241,239 @@ __draw_column_to_sprite:
     
     rts
 
-SPR_ADDR = ZP_PTR_1
-__transfer_sprite_to_vram:
-    lda #(<RAM_WIN)
+BITMAP_ADDR = ZP_PTR_1
+SPR_ADDR = ZP_PTR_3
+CURR_X = ZP_PTR_5
+CURR_Y = ZP_PTR_6
+ROW_TEMP = ZP_PTR_7
+
+.macro inc_spr_addr
+    lda SPR_ADDR
+    clc
+    adc #1
     sta SPR_ADDR
-    lda #(>RAM_WIN)
+    lda SPR_ADDR+1
+    adc #0
     sta SPR_ADDR+1
-
-    stz VERA_ctrl
-    lda (sp)
-    inc sp
-    sta VERA_addr_low
-    lda (sp)
-    inc sp
-    sta VERA_addr_high
-    lda (sp)
-    inc sp
-    ora #(%00010000)
-    sta VERA_addr_bank
-
-    lda (sp)
-    tax
-    inc sp
-    lda (sp)
-    tay
-    inc sp
-
-    @transfer_loop_1:
-        @transfer_loop_2:
-        lda (SPR_ADDR)
-        sta VERA_data0
-        
-        lda SPR_ADDR
-        clc
-        adc #1
-        sta SPR_ADDR
-        lda SPR_ADDR+1
-        adc #0
+    
+    cmp #($C0)
+    bne :+
+        stz SPR_ADDR
+        lda #($A0)
         sta SPR_ADDR+1
 
+        inc SPR_ADDR+2
+    :
+.endmacro
+
+__transfer_sprite_to_vram:
+    stz BITMAP_ADDR
+    stz BITMAP_ADDR+1
+    lda #(%00010000)
+    sta BITMAP_ADDR+2
+
+    stz SPR_ADDR
+    lda #(>RAM_WIN)
+    sta SPR_ADDR+1
+    lda #2
+    sta SPR_ADDR+2
+
+    ldy #16
+    stz ROW_TEMP
+
+    stz VERA_ctrl
+    lda BITMAP_ADDR
+    sta VERA_addr_low
+    lda BITMAP_ADDR+1
+    sta VERA_addr_high
+    lda BITMAP_ADDR+2
+    sta VERA_addr_bank
+
+    ; TODO: account for sprite widths greater than 256
+    lda _bmx_height
+    sta CURR_Y
+    @vertical_loop:
+        ldx #16
+
+        lda _bmx_width
+        sta CURR_X
+        @row_loop:
+            lda SPR_ADDR+2
+            sta RAM_BANK_SEL
+
+            lda (SPR_ADDR)
+            sta VERA_data0
+
+            inc_spr_addr
+
+            dex
+            bne @skip_change_bitmap_addr
+                lda BITMAP_ADDR
+                sta VERA_addr_low
+                lda BITMAP_ADDR+1
+                clc
+                adc #16
+                sta BITMAP_ADDR+1
+                sta VERA_addr_high
+                lda BITMAP_ADDR+2
+                adc #0
+                sta BITMAP_ADDR+2
+                sta VERA_addr_bank
+
+                ldx #16
+
+            @skip_change_bitmap_addr:
+            
+
+        dec CURR_X
+        bne @row_loop
+
+        dey
+        bne @skip_change_ver_bitmap_addr
+            stz BITMAP_ADDR 
+            inc ROW_TEMP
+            lda ROW_TEMP
+            sta BITMAP_ADDR+1
+
+            ldy #16
+            ; rts
+            jmp @end_bitmap_change_addr
+
+        @skip_change_ver_bitmap_addr:
+            stz VERA_ctrl
+            lda BITMAP_ADDR
+            clc
+            adc #16
+            sta BITMAP_ADDR
+            lda ROW_TEMP
+            sta BITMAP_ADDR+1
+
+
+        @end_bitmap_change_addr:
+        lda BITMAP_ADDR
+        sta VERA_addr_low
+        lda BITMAP_ADDR+1
+        sta VERA_addr_high
+        lda #(%00010000)
+        sta BITMAP_ADDR+2
+        sta VERA_addr_bank
+
+        
+    dec CURR_Y
+    bne @vertical_loop
+
+    rts
+
+CURR_TILE_INDEX = ZP_PTR_1
+CAN_TILEMAP_ADDR = ZP_PTR_2
+
+__init_canvas_vera_tiles:
+    ; clear canvas tileset
+        stz VERA_ctrl
+        stz VERA_addr_low
+        stz VERA_addr_high
+        lda #(%00010000)
+        sta VERA_addr_bank
+
+        ldy #($A0);
+        @clear_ver_loop3:
+            ldx #($00);
+            @clear_hor_loop3:
+                stz VERA_data0
+                stz VERA_data0
+            dex
+            bne @clear_hor_loop3
+        dey
+        bne @clear_ver_loop3
+
+    ; clear canvas tilemap 
+        stz VERA_ctrl
+        lda #(<$5000)
+        sta VERA_addr_low
+        lda #(>$5000)
+        sta VERA_addr_high
+        lda #(%00010001)
+        sta VERA_addr_bank
+
+        ldy #32;
+        @clear_ver_loop:
+            ldx #32;
+            @clear_hor_loop:
+                lda #(<320) 
+                sta VERA_data0
+                lda #(>320) 
+                sta VERA_data0
+            dex
+            bne @clear_hor_loop
+        dey
+        bne @clear_ver_loop
+
+    ; clear blank_tile:
+        stz VERA_ctrl
+        stz VERA_addr_low
+        lda #(<320)
+        sta VERA_addr_high
+        lda #(%00010001)
+        sta VERA_addr_bank
+
+        ldy #16;
+        @clear_ver_loop2:
+            ldx #16;
+            @clear_hor_loop2:
+                stz VERA_data0
+            dex
+            bne @clear_hor_loop2
+        dey
+        bne @clear_ver_loop2
+
+
+    lda #(<$5000)
+    sta CAN_TILEMAP_ADDR
+    lda #(>$5000)
+    sta CAN_TILEMAP_ADDR+1
+
+    ldy #0
+    @vertical_loop:
+        stz VERA_ctrl
+        lda CAN_TILEMAP_ADDR
+        sta VERA_addr_low
+        lda CAN_TILEMAP_ADDR+1
+        sta VERA_addr_high
+        lda #(%00010001)
+        sta VERA_addr_bank
+
+        sty CURR_TILE_INDEX
+        stz CURR_TILE_INDEX+1
+
+        ldx #20
+        @row_loop:
+            lda CURR_TILE_INDEX
+            sta VERA_data0
+            lda CURR_TILE_INDEX+1
+            sta VERA_data0
+
+            lda CURR_TILE_INDEX
+            clc
+            adc #16
+            sta CURR_TILE_INDEX 
+            lda CURR_TILE_INDEX+1
+            adc #0
+            sta CURR_TILE_INDEX+1
+
         dex
-        bne @transfer_loop_2
+        bne @row_loop
 
-    ldx #0
-    dey
-    bne @transfer_loop_1
+        lda CAN_TILEMAP_ADDR
+        clc
+        adc #64
+        sta CAN_TILEMAP_ADDR 
+        lda CAN_TILEMAP_ADDR+1
+        adc #0
+        sta CAN_TILEMAP_ADDR+1
 
+    iny
+    cpy #16
+    bne @vertical_loop
 
     rts
 

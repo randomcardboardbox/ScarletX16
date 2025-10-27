@@ -110,3 +110,21 @@ void init_canvas_vera_sprites(){
         }
     }
 }
+
+u8 zoom = 2;
+u16 x_pan = 0;
+u16 y_pan = 0;
+void canvas_zoom_handler(){
+    if (keycode) {
+        if(keycode == 29) x_pan += 1;
+        if(keycode == 157) x_pan -= 1;
+        if(keycode == 17) y_pan += 1;
+        if(keycode == 145) y_pan -= 1;
+    }
+
+    VERA_dc_hscale = 128/zoom;
+    VERA_dc_vscale = 128/zoom;
+
+    L0_HSCROLL = x_pan;
+    L0_VSCROLL = y_pan;
+}

@@ -17,10 +17,8 @@
 	.import		__wait_for_nmi
 	.import		__init_irq_handler
 	.import		__init_screen_mode
-	.import		_parse_mouse_input
 	.import		_get_keycode
 	.import		_keycode
-	.import		__initialize_mouse
 	.import		__get_mouse_input
 	.import		_set_layer_config
 	.import		_change_tool
@@ -29,12 +27,12 @@
 	.import		_bmx_width
 	.import		_bmx_height
 	.import		_bmx_no_pals
-	.import		__draw_bitmap_canvas_to_screen
 	.import		__transfer_pal_to_vera
 	.import		__transfer_sprite_to_vram
+	.import		__init_canvas_vera_tiles
 	.export		_handle_keyboard_input
 	.import		__image_data_size
-	.import		_init_canvas_vera_sprites
+	.import		_canvas_zoom_handler
 	.import		_restore_last_history_node
 	.import		_undo_last_history_node
 	.export		_filename
@@ -182,15 +180,6 @@ L000C:	lda     #$0F
 	jsr     pushax
 	ldx     #$20
 	jsr     _cbm_read
-	ldx     #$20
-	lda     #$00
-	jsr     pushax
-	ina
-	jsr     pusha
-	ldy     #$07
-	jsr     pushwysp
-	lda     #$00
-	jsr     __transfer_sprite_to_vram
 	lda     #$00
 	stz     sreg+1
 	stz     sreg
@@ -226,17 +215,9 @@ L000D:	lda     #$0F
 	lda     __image_data_size
 	ldx     __image_data_size+1
 	jsr     _cbm_read
-	lda     __image_data_size
-	ldx     __image_data_size+1
-	jsr     pushax
-	lda     #$01
-	jsr     pusha
-	ldy     #$07
-	jsr     pushwysp
-	lda     #$00
-	jsr     __transfer_sprite_to_vram
 	lda     #$0F
 	jsr     _cbm_close
+	jsr     __transfer_sprite_to_vram
 	jmp     incsp5
 
 .endproc
@@ -278,10 +259,8 @@ L000D:	lda     #$0F
 	jsr     __init_irq_handler
 	jsr     __init_screen_mode
 	jsr     _set_layer_config
-	jsr     __initialize_mouse
+	jsr     __init_canvas_vera_tiles
 	jsr     _load_bmx_file
-	jsr     _init_canvas_vera_sprites
-	jsr     __draw_bitmap_canvas_to_screen
 	stz     $0056+3
 	lda     #$04
 	sta     $0056+2
@@ -290,10 +269,9 @@ L000D:	lda     #$0F
 	stz     $0056
 	stz     __current_tool
 L0002:	jsr     __wait_for_nmi
+	jsr     _canvas_zoom_handler
 	jsr     __get_mouse_input
-	jsr     _parse_mouse_input
 	jsr     _get_keycode
-	jsr     _handle_keyboard_input
 	bra     L0002
 
 .endproc

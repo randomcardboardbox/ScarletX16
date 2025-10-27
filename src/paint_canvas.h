@@ -61,7 +61,8 @@ extern void _draw_bitmap_canvas_to_screen(void);
 extern void _render_colour_sprite(u8 col, u8 bank, u16 spr_addr);
 extern void _draw_row_to_screen(u8 row);
 extern void _transfer_pal_to_vera(void);
-extern void _transfer_sprite_to_vram(u16 size, u8 bank_addr, u16 addr, u8 ram_bank);
+extern void _transfer_sprite_to_vram(void);
+extern void _init_canvas_vera_tiles(void);
 
 extern void handle_keyboard_input(void);
 
@@ -72,5 +73,6 @@ extern u8 _get_pixel(u8 x, u8 y);
 extern u16 _image_data_size;
 
 extern void init_canvas_vera_sprites(void);
+extern void canvas_zoom_handler(void);
 
 #endif//PAINT_CANVAS

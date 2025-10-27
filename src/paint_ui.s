@@ -44,8 +44,8 @@
 	.import		__draw_ui_icon
 	.import		__press_toggle_button_mouse_func
 	.export		_tileset0_addr
-	.export		_tileset1_addr
 	.export		_tilemap0_addr
+	.export		_tileset1_addr
 	.export		_tilemap1_addr
 	.export		_pal_text
 	.export		_initialize_palette_ui
@@ -56,10 +56,10 @@
 
 _tileset0_addr:
 	.dword	$00000000
+_tilemap0_addr:
+	.dword	$00015000
 _tileset1_addr:
 	.dword	$00000000
-_tilemap0_addr:
-	.dword	$00010000
 _tilemap1_addr:
 	.dword	$00012000
 _pal_text:
@@ -116,9 +116,32 @@ _context_container_id:
 	stz     $9F30+1
 	stz     $9F32
 	stz     $9F32+1
-	lda     #$07
+	lda     #$03
 	sta     $9F2D
-	stz     $9F2F
+	lda     _tileset0_addr+3
+	sta     sreg+1
+	lda     _tileset0_addr+2
+	sta     sreg
+	lda     _tileset0_addr+1
+	ldx     sreg
+	ldy     sreg+1
+	sty     sreg
+	stz     sreg+1
+	jsr     shreax1
+	and     #$FC
+	ora     #$03
+	sta     $9F2F
+	lda     _tilemap0_addr+3
+	sta     sreg+1
+	lda     _tilemap0_addr+2
+	sta     sreg
+	lda     _tilemap0_addr+1
+	ldx     sreg
+	ldy     sreg+1
+	sty     sreg
+	stz     sreg+1
+	jsr     shreax1
+	sta     $9F2E
 	stz     $9F37
 	stz     $9F37+1
 	stz     $9F39

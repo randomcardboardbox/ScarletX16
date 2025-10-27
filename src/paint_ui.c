@@ -10,8 +10,9 @@
 #define LAYER_SIZE 0x2000
 
 u32 tileset0_addr = 0x00000;
+u32 tilemap0_addr = 0x15000;
+
 u32 tileset1_addr = 0x00000;
-u32 tilemap0_addr = 0x10000;
 u32 tilemap1_addr = 0x10000+LAYER_SIZE;
 
 void set_layer_config(){
@@ -24,8 +25,9 @@ void set_layer_config(){
 
     L0_HSCROLL = 0;
     L0_VSCROLL = 0;
-    L0_CONFIG = 0b00000111;
-    L0_TILEBASE = 0;
+    L0_CONFIG = 0b00000011;
+    L0_TILEBASE =  0b00000011 | ((tileset0_addr>>9)&0b11111100);
+    L0_MAPBASE = (tilemap0_addr >> 9);
 
     L1_HSCROLL = 0;
     L1_VSCROLL = 0;

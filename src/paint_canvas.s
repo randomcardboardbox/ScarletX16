@@ -32,10 +32,15 @@
 	.import		__display_row_pow
 	.import		__display_has_columns
 	.export		_init_canvas_vera_sprites
+	.export		_canvas_zoom_handler
+	.import		_keycode
 	.export		_x_axis
 	.export		_y_axis
 	.export		_scale
 	.export		_get_axis_scale
+	.export		_zoom
+	.export		_x_pan
+	.export		_y_pan
 
 .segment	"DATA"
 
@@ -61,6 +66,12 @@ _y_axis:
 	.byte	$00
 _scale:
 	.byte	$00
+_zoom:
+	.byte	$02
+_x_pan:
+	.word	$0000
+_y_pan:
+	.word	$0000
 
 ; ---------------------------------------------------------------
 ; void __near__ init_canvas_vera_sprites (void)
@@ -364,6 +375,68 @@ L0021:	lda     __canvas_paint_offset
 	ldy     #$01
 	jsr     addeqysp
 L0011:	jmp     incsp3
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ canvas_zoom_handler (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_canvas_zoom_handler: near
+
+.segment	"CODE"
+
+	lda     _keycode
+	beq     L000E
+	lda     _keycode
+	cmp     #$1D
+	bne     L000B
+	inc     _x_pan
+	bne     L000B
+	inc     _x_pan+1
+L000B:	lda     _keycode
+	cmp     #$9D
+	bne     L000C
+	lda     _x_pan
+	bne     L0006
+	dec     _x_pan+1
+L0006:	dea
+	sta     _x_pan
+L000C:	lda     _keycode
+	cmp     #$11
+	bne     L000D
+	inc     _y_pan
+	bne     L000D
+	inc     _y_pan+1
+L000D:	lda     _keycode
+	cmp     #$91
+	bne     L000E
+	lda     _y_pan
+	bne     L000A
+	dec     _y_pan+1
+L000A:	dea
+	sta     _y_pan
+L000E:	lda     #$80
+	jsr     pusha0
+	lda     _zoom
+	jsr     tosdiva0
+	sta     $9F2A
+	lda     #$80
+	jsr     pusha0
+	lda     _zoom
+	jsr     tosdiva0
+	sta     $9F2B
+	lda     _x_pan+1
+	sta     $9F30+1
+	lda     _x_pan
+	sta     $9F30
+	lda     _y_pan+1
+	sta     $9F32+1
+	lda     _y_pan
+	sta     $9F32
+	rts
 
 .endproc
 
