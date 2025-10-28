@@ -55,11 +55,9 @@ extern u8 _display_has_columns;
 extern u8 _square_root(u16 number);
 
 extern void _initialize_bmx_data(void);
-extern void _draw_canvas_to_screen(void);
 extern void _render_palette_sprites(void);
 extern void _draw_bitmap_canvas_to_screen(void);
 extern void _render_colour_sprite(u8 col, u8 bank, u16 spr_addr);
-extern void _draw_row_to_screen(u8 row);
 extern void _transfer_pal_to_vera(void);
 extern void _transfer_sprite_to_vram(void);
 extern void _init_canvas_vera_tiles(void);

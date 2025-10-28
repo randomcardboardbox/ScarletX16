@@ -161,11 +161,9 @@ void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u
 
                 if(start_y1+i >= 0 && start_y1+i < (*bmx_height)) {
                     _draw_row_to_sprite(colour, row_width, start_x, start_y1+i);
-                    if(redraw_screen) _draw_row_to_screen(start_y1+i);
                 }
                 if(start_y2-i >= 0 && start_y2-i < (*bmx_height)) {
                     _draw_row_to_sprite(colour, row_width, start_x, start_y2-i);
-                    if(redraw_screen) _draw_row_to_screen(start_y2-i);
                 }
             }
         }
@@ -190,7 +188,6 @@ void draw_brush_to_sprite(u8 x, u8 y, u8 colour, u8 brush_size, u8 brush_type, u
             if(start_y+i >= (i16)(*bmx_height)) break;
             if(start_y+i >= (i16)0){
                 _draw_row_to_sprite(colour, width, start_x, start_y+i);
-                if(redraw_screen) _draw_row_to_screen(start_y+i);
             }
         }
     }

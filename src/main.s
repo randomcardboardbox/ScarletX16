@@ -31,6 +31,7 @@
 	.import		__transfer_sprite_to_vram
 	.import		__init_canvas_vera_tiles
 	.export		_handle_keyboard_input
+	.import		__draw_row_to_sprite
 	.import		__image_data_size
 	.import		_canvas_zoom_handler
 	.import		_restore_last_history_node
@@ -266,8 +267,15 @@ L000D:	lda     #$0F
 	sta     $0056+2
 	lda     #$A0
 	sta     $0056+1
+	lda     #$00
 	stz     $0056
 	stz     __current_tool
+	jsr     pusha
+	lda     #$20
+	jsr     pusha
+	lda     #$08
+	jsr     pusha
+	jsr     __draw_row_to_sprite
 L0002:	jsr     __wait_for_nmi
 	jsr     _canvas_zoom_handler
 	jsr     __get_mouse_input

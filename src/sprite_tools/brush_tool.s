@@ -11,7 +11,6 @@
 	.importzp	tmp1, tmp2, tmp3, tmp4, ptr1, ptr2, ptr3, ptr4
 	.macpack	longbranch
 	.export		_draw_brush_to_sprite
-	.export		_draw_brush_to_render_queue
 	.export		_draw_brush_left_hemisphere
 	.export		_draw_brush_right_hemisphere
 	.export		_draw_brush_lower_hemisphere
@@ -19,11 +18,11 @@
 	.import		__draw_row_to_render_queue
 	.import		_bmx_width
 	.import		_bmx_height
-	.import		__draw_row_to_screen
 	.import		__draw_row_to_sprite
 	.import		__draw_column_to_sprite
 	.export		_row_widths
 	.export		_brush_ptrs
+	.export		_draw_brush_to_render_queue
 
 .segment	"DATA"
 
@@ -222,18 +221,18 @@ L0003:	jsr     asrax1
 	ldy     #$06
 	sbc     (sp),y
 	ldx     #$00
-	bcs     L0038
+	bcs     L0035
 	dex
-L0038:	jsr     pushax
+L0035:	jsr     pushax
 	ldx     #$00
 	ldy     #$08
 	lda     (sp),y
 	clc
 	ldy     #$0D
 	adc     (sp),y
-	bcc     L0039
+	bcc     L0036
 	inx
-L0039:	jsr     decax2
+L0036:	jsr     decax2
 	jsr     pushax
 	jsr     decsp3
 	ldx     #$00
@@ -246,9 +245,9 @@ L0006:	ldy     #$09
 	cmp     (sp),y
 	txa
 	sbc     #$00
-	bvc     L003A
+	bvc     L0037
 	eor     #$80
-L003A:	jpl     L0007
+L0037:	jpl     L0007
 	dey
 	lda     (sp),y
 	tay
@@ -457,18 +456,18 @@ L0005:	ldy     #$0B
 	ldy     #$06
 	sbc     (sp),y
 	ldx     #$00
-	bcs     L003B
+	bcs     L0038
 	dex
-L003B:	jsr     pushax
+L0038:	jsr     pushax
 	ldx     #$00
 	ldy     #$08
 	lda     (sp),y
 	clc
 	ldy     #$0D
 	adc     (sp),y
-	bcc     L003C
+	bcc     L0039
 	inx
-L003C:	jsr     decax1
+L0039:	jsr     decax1
 	jsr     pushax
 	jsr     decsp4
 	ldx     #$00
@@ -481,9 +480,9 @@ L0019:	ldy     #$0A
 	cmp     (sp),y
 	txa
 	sbc     #$00
-	bvc     L003D
+	bvc     L003A
 	eor     #$80
-L003D:	jpl     L001A
+L003A:	jpl     L001A
 	dey
 	lda     (sp),y
 	tay
@@ -579,7 +578,7 @@ L0020:	ldy     #$0A
 	txa
 	iny
 	adc     (sp),y
-	bmi     L0026
+	bmi     L0022
 	ldy     #$0A
 	jsr     ldaxysp
 	clc
@@ -596,7 +595,7 @@ L0020:	ldy     #$0A
 	ldx     _bmx_height+1
 	jsr     ldaxi
 	jsr     tosicmp
-	bcs     L0026
+	bcs     L0022
 	ldy     #$12
 	lda     (sp),y
 	jsr     pusha
@@ -617,21 +616,7 @@ L0020:	ldy     #$0A
 	adc     (sp),y
 	pla
 	jsr     __draw_row_to_sprite
-	ldy     #$0F
-	lda     (sp),y
-	beq     L0026
-	ldy     #$0A
-	jsr     ldaxysp
-	clc
-	ldy     #$06
-	adc     (sp),y
-	pha
-	txa
-	iny
-	adc     (sp),y
-	pla
-	jsr     __draw_row_to_screen
-L0026:	ldy     #$05
+L0022:	ldy     #$05
 	jsr     ldaxysp
 	sec
 	ldy     #$09
@@ -677,20 +662,6 @@ L0026:	ldy     #$05
 	sbc     (sp),y
 	pla
 	jsr     __draw_row_to_sprite
-	ldy     #$0F
-	lda     (sp),y
-	beq     L001B
-	ldy     #$05
-	jsr     ldaxysp
-	sec
-	ldy     #$09
-	sbc     (sp),y
-	pha
-	txa
-	iny
-	sbc     (sp),y
-	pla
-	jsr     __draw_row_to_screen
 L001B:	ldy     #$09
 	ldx     #$00
 	lda     #$01
@@ -704,27 +675,27 @@ L0002:	jsr     decsp2
 	ldx     #$00
 	lda     (sp),y
 	ina
-	bne     L002D
+	bne     L002B
 	inx
-L002D:	jsr     asrax1
+L002B:	jsr     asrax1
 	jsr     pusha
 	ldy     #$08
 	lda     (sp),y
 	sec
 	sbc     (sp)
 	ldx     #$00
-	bcs     L003E
+	bcs     L003B
 	dex
-L003E:	jsr     pushax
+L003B:	jsr     pushax
 	ldy     #$09
 	lda     (sp),y
 	sec
 	ldy     #$02
 	sbc     (sp),y
 	ldx     #$00
-	bcs     L003F
+	bcs     L003C
 	dex
-L003F:	jsr     pushax
+L003C:	jsr     pushax
 	ldy     #$09
 	lda     (sp),y
 	jsr     pusha
@@ -732,7 +703,7 @@ L003F:	jsr     pushax
 	lda     (sp),y
 	ldy     #$05
 	cmp     (sp),y
-	bcs     L002E
+	bcs     L002C
 	ldx     #$00
 	txa
 	ldy     #$03
@@ -742,8 +713,8 @@ L003F:	jsr     pushax
 	sec
 	ldy     #$0D
 	sbc     (sp),y
-	bra     L0049
-L002E:	ldy     #$0A
+	bra     L0046
+L002C:	ldy     #$0A
 	lda     (sp),y
 	clc
 	ldy     #$03
@@ -759,8 +730,8 @@ L002E:	ldy     #$0A
 	ldx     _bmx_width+1
 	jsr     ldaxi
 	jsr     tosicmp
-	bcc     L0030
-	beq     L0030
+	bcc     L002E
+	beq     L002E
 	ldy     #$0A
 	lda     (sp),y
 	clc
@@ -777,23 +748,23 @@ L002E:	ldy     #$0A
 	ldx     _bmx_width+1
 	jsr     ldaxi
 	jsr     tossubax
-L0049:	eor     #$FF
+L0046:	eor     #$FF
 	sec
 	adc     (sp)
 	sta     (sp)
-L0030:	ldx     #$00
+L002E:	ldx     #$00
 	txa
 	ldy     #$06
 	jsr     staxysp
-L0031:	ldy     #$07
+L002F:	ldy     #$07
 	jsr     ldaxysp
 	ldy     #$0A
 	cmp     (sp),y
 	txa
 	sbc     #$00
-	bvc     L0040
+	bvc     L003D
 	eor     #$80
-L0040:	jpl     L0032
+L003D:	bpl     L0030
 	ldy     #$07
 	jsr     ldaxysp
 	clc
@@ -810,7 +781,7 @@ L0040:	jpl     L0032
 	ldx     _bmx_height+1
 	jsr     ldaxi
 	jsr     tosicmp
-	bpl     L0032
+	bpl     L0030
 	ldy     #$07
 	jsr     ldaxysp
 	clc
@@ -819,7 +790,7 @@ L0040:	jpl     L0032
 	txa
 	iny
 	adc     (sp),y
-	bmi     L0033
+	bmi     L0031
 	ldy     #$0B
 	lda     (sp),y
 	jsr     pusha
@@ -840,27 +811,293 @@ L0040:	jpl     L0032
 	adc     (sp),y
 	pla
 	jsr     __draw_row_to_sprite
-	ldy     #$08
-	lda     (sp),y
-	beq     L0033
-	dey
-	jsr     ldaxysp
-	clc
-	ldy     #$01
-	adc     (sp),y
-	pha
-	txa
-	iny
-	adc     (sp),y
-	pla
-	jsr     __draw_row_to_screen
-L0033:	ldy     #$06
+L0031:	ldy     #$06
 	ldx     #$00
 	lda     #$01
 	jsr     addeqysp
-	jmp     L0031
-L0032:	jsr     incsp8
+	bra     L002F
+L0030:	jsr     incsp8
 	jmp     incsp6
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ draw_brush_left_hemisphere (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_brush_left_hemisphere: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	lsr     a
+	jsr     pusha
+	lda     (sp)
+	tay
+	lda     _brush_ptrs,y
+	jsr     pusha
+	jsr     decsp3
+	lda     #$00
+	ldy     #$01
+L0009:	sta     (sp),y
+	ldy     #$04
+	cmp     (sp),y
+	bcs     L0004
+	dey
+	lda     (sp),y
+	tay
+	lda     _row_widths,y
+	ldy     #$02
+	sta     (sp),y
+	iny
+	clc
+	lda     #$01
+	adc     (sp),y
+	sta     (sp),y
+	ldy     #$07
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	clc
+	ldy     #$0B
+	adc     (sp),y
+	sec
+	ldy     #$06
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	jsr     __draw_column_to_sprite
+	ldy     #$01
+	clc
+	tya
+	adc     (sp),y
+	bra     L0009
+L0004:	ldy     #$0A
+	jmp     addysp
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ draw_brush_right_hemisphere (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_brush_right_hemisphere: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	lsr     a
+	jsr     pusha
+	lda     (sp)
+	tay
+	lda     _brush_ptrs,y
+	jsr     pusha
+	jsr     decsp3
+	lda     #$00
+	ldy     #$01
+L0009:	sta     (sp),y
+	ldy     #$04
+	cmp     (sp),y
+	bcs     L0004
+	dey
+	lda     (sp),y
+	tay
+	lda     _row_widths,y
+	ldy     #$02
+	sta     (sp),y
+	iny
+	clc
+	lda     #$01
+	adc     (sp),y
+	sta     (sp),y
+	ldy     #$07
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$06
+	lda     (sp),y
+	clc
+	ldy     #$0B
+	adc     (sp),y
+	sec
+	ldy     #$03
+	sbc     (sp),y
+	sec
+	sbc     #$01
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$05
+	sbc     (sp),y
+	jsr     __draw_column_to_sprite
+	ldy     #$01
+	clc
+	tya
+	adc     (sp),y
+	bra     L0009
+L0004:	ldy     #$0A
+	jmp     addysp
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ draw_brush_lower_hemisphere (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_brush_lower_hemisphere: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	lsr     a
+	jsr     pusha
+	lda     (sp)
+	tay
+	lda     _brush_ptrs,y
+	jsr     pusha
+	jsr     decsp3
+	lda     #$00
+	ldy     #$01
+L0009:	sta     (sp),y
+	ldy     #$04
+	cmp     (sp),y
+	bcs     L0004
+	dey
+	lda     (sp),y
+	tay
+	lda     _row_widths,y
+	ldy     #$02
+	sta     (sp),y
+	iny
+	clc
+	lda     #$01
+	adc     (sp),y
+	sta     (sp),y
+	ldy     #$07
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$07
+	lda     (sp),y
+	clc
+	ldy     #$0B
+	adc     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	sec
+	sbc     #$01
+	jsr     __draw_row_to_sprite
+	ldy     #$01
+	clc
+	tya
+	adc     (sp),y
+	bra     L0009
+L0004:	ldy     #$0A
+	jmp     addysp
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ draw_brush_upper_hemisphere (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_brush_upper_hemisphere: near
+
+.segment	"CODE"
+
+	jsr     pusha
+	ldy     #$01
+	lda     (sp),y
+	lsr     a
+	jsr     pusha
+	lda     (sp)
+	tay
+	lda     _brush_ptrs,y
+	jsr     pusha
+	jsr     decsp3
+	lda     #$00
+	ldy     #$01
+L0009:	sta     (sp),y
+	ldy     #$04
+	cmp     (sp),y
+	bcs     L0004
+	dey
+	lda     (sp),y
+	tay
+	lda     _row_widths,y
+	ldy     #$02
+	sta     (sp),y
+	iny
+	clc
+	lda     #$01
+	adc     (sp),y
+	sta     (sp),y
+	ldy     #$07
+	lda     (sp),y
+	jsr     pusha
+	ldy     #$03
+	lda     (sp),y
+	asl     a
+	jsr     pusha
+	ldy     #$0B
+	lda     (sp),y
+	sec
+	ldy     #$04
+	sbc     (sp),y
+	jsr     pusha
+	ldy     #$04
+	lda     (sp),y
+	clc
+	ldy     #$0B
+	adc     (sp),y
+	sec
+	ldy     #$07
+	sbc     (sp),y
+	jsr     __draw_row_to_sprite
+	ldy     #$01
+	clc
+	tya
+	adc     (sp),y
+	bra     L0009
+L0004:	ldy     #$0A
+	jmp     addysp
 
 .endproc
 
@@ -1509,286 +1746,6 @@ L0031:	ldy     #$06
 	bra     L002F
 L0030:	jsr     incsp8
 	jmp     incsp5
-
-.endproc
-
-; ---------------------------------------------------------------
-; void __near__ draw_brush_left_hemisphere (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_draw_brush_left_hemisphere: near
-
-.segment	"CODE"
-
-	jsr     pusha
-	ldy     #$01
-	lda     (sp),y
-	lsr     a
-	jsr     pusha
-	lda     (sp)
-	tay
-	lda     _brush_ptrs,y
-	jsr     pusha
-	jsr     decsp3
-	lda     #$00
-	ldy     #$01
-L0009:	sta     (sp),y
-	ldy     #$04
-	cmp     (sp),y
-	bcs     L0004
-	dey
-	lda     (sp),y
-	tay
-	lda     _row_widths,y
-	ldy     #$02
-	sta     (sp),y
-	iny
-	clc
-	lda     #$01
-	adc     (sp),y
-	sta     (sp),y
-	ldy     #$07
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	asl     a
-	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	clc
-	ldy     #$0B
-	adc     (sp),y
-	sec
-	ldy     #$06
-	sbc     (sp),y
-	jsr     pusha
-	ldy     #$0B
-	lda     (sp),y
-	sec
-	ldy     #$05
-	sbc     (sp),y
-	jsr     __draw_column_to_sprite
-	ldy     #$01
-	clc
-	tya
-	adc     (sp),y
-	bra     L0009
-L0004:	ldy     #$0A
-	jmp     addysp
-
-.endproc
-
-; ---------------------------------------------------------------
-; void __near__ draw_brush_right_hemisphere (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_draw_brush_right_hemisphere: near
-
-.segment	"CODE"
-
-	jsr     pusha
-	ldy     #$01
-	lda     (sp),y
-	lsr     a
-	jsr     pusha
-	lda     (sp)
-	tay
-	lda     _brush_ptrs,y
-	jsr     pusha
-	jsr     decsp3
-	lda     #$00
-	ldy     #$01
-L0009:	sta     (sp),y
-	ldy     #$04
-	cmp     (sp),y
-	bcs     L0004
-	dey
-	lda     (sp),y
-	tay
-	lda     _row_widths,y
-	ldy     #$02
-	sta     (sp),y
-	iny
-	clc
-	lda     #$01
-	adc     (sp),y
-	sta     (sp),y
-	ldy     #$07
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	asl     a
-	jsr     pusha
-	ldy     #$06
-	lda     (sp),y
-	clc
-	ldy     #$0B
-	adc     (sp),y
-	sec
-	ldy     #$03
-	sbc     (sp),y
-	sec
-	sbc     #$01
-	jsr     pusha
-	ldy     #$0B
-	lda     (sp),y
-	sec
-	ldy     #$05
-	sbc     (sp),y
-	jsr     __draw_column_to_sprite
-	ldy     #$01
-	clc
-	tya
-	adc     (sp),y
-	bra     L0009
-L0004:	ldy     #$0A
-	jmp     addysp
-
-.endproc
-
-; ---------------------------------------------------------------
-; void __near__ draw_brush_lower_hemisphere (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_draw_brush_lower_hemisphere: near
-
-.segment	"CODE"
-
-	jsr     pusha
-	ldy     #$01
-	lda     (sp),y
-	lsr     a
-	jsr     pusha
-	lda     (sp)
-	tay
-	lda     _brush_ptrs,y
-	jsr     pusha
-	jsr     decsp3
-	lda     #$00
-	ldy     #$01
-L0009:	sta     (sp),y
-	ldy     #$04
-	cmp     (sp),y
-	bcs     L0004
-	dey
-	lda     (sp),y
-	tay
-	lda     _row_widths,y
-	ldy     #$02
-	sta     (sp),y
-	iny
-	clc
-	lda     #$01
-	adc     (sp),y
-	sta     (sp),y
-	ldy     #$07
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	asl     a
-	jsr     pusha
-	ldy     #$0B
-	lda     (sp),y
-	sec
-	ldy     #$04
-	sbc     (sp),y
-	jsr     pusha
-	ldy     #$07
-	lda     (sp),y
-	clc
-	ldy     #$0B
-	adc     (sp),y
-	sec
-	ldy     #$04
-	sbc     (sp),y
-	sec
-	sbc     #$01
-	jsr     __draw_row_to_sprite
-	ldy     #$01
-	clc
-	tya
-	adc     (sp),y
-	bra     L0009
-L0004:	ldy     #$0A
-	jmp     addysp
-
-.endproc
-
-; ---------------------------------------------------------------
-; void __near__ draw_brush_upper_hemisphere (unsigned char x, unsigned char y, unsigned char colour, unsigned char brush_size, unsigned char brush_type)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_draw_brush_upper_hemisphere: near
-
-.segment	"CODE"
-
-	jsr     pusha
-	ldy     #$01
-	lda     (sp),y
-	lsr     a
-	jsr     pusha
-	lda     (sp)
-	tay
-	lda     _brush_ptrs,y
-	jsr     pusha
-	jsr     decsp3
-	lda     #$00
-	ldy     #$01
-L0009:	sta     (sp),y
-	ldy     #$04
-	cmp     (sp),y
-	bcs     L0004
-	dey
-	lda     (sp),y
-	tay
-	lda     _row_widths,y
-	ldy     #$02
-	sta     (sp),y
-	iny
-	clc
-	lda     #$01
-	adc     (sp),y
-	sta     (sp),y
-	ldy     #$07
-	lda     (sp),y
-	jsr     pusha
-	ldy     #$03
-	lda     (sp),y
-	asl     a
-	jsr     pusha
-	ldy     #$0B
-	lda     (sp),y
-	sec
-	ldy     #$04
-	sbc     (sp),y
-	jsr     pusha
-	ldy     #$04
-	lda     (sp),y
-	clc
-	ldy     #$0B
-	adc     (sp),y
-	sec
-	ldy     #$07
-	sbc     (sp),y
-	jsr     __draw_row_to_sprite
-	ldy     #$01
-	clc
-	tya
-	adc     (sp),y
-	bra     L0009
-L0004:	ldy     #$0A
-	jmp     addysp
 
 .endproc
 

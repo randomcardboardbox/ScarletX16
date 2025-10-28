@@ -21,7 +21,6 @@
 	.export		_undo_last_history_node
 	.import		_bmx_width
 	.import		_bmx_height
-	.import		__draw_canvas_to_screen
 	.import		__draw_row_to_sprite
 	.import		__get_pixel
 	.export		_node_start_pos1
@@ -265,7 +264,6 @@ L0007:	sta     (sp)
 	adc     (sp)
 	bra     L0007
 L0004:	jsr     __get_history_redo_byte
-	jsr     __draw_canvas_to_screen
 	jmp     incsp3
 L0002:	rts
 
@@ -328,7 +326,6 @@ L0007:	sta     (sp),y
 	bra     L0007
 L0004:	jsr     __get_history_byte
 	jsr     __get_history_byte
-	jsr     __draw_canvas_to_screen
 	jmp     incsp2
 L0002:	rts
 

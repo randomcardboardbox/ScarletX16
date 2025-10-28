@@ -70,7 +70,6 @@ void restore_last_history_node(){
             _draw_row_to_sprite(colour, 1, x, y);
         }
         _get_history_redo_byte();
-        _draw_canvas_to_screen();
     }
 }
 
@@ -87,6 +86,5 @@ void undo_last_history_node(){
         }
         _get_history_byte();
         _get_history_byte();
-        _draw_canvas_to_screen();
     }
 }

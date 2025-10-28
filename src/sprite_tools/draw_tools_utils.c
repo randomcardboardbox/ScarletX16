@@ -43,10 +43,8 @@ void draw_pixel_line_h(u8 x0, u8 y0, u8 x1, u8 y1, u8 col){
         row_width += 1;
         add_history_node_position(x,y,col);
         _draw_row_to_sprite(col, 1, x, y);
-        _draw_row_to_screen(y);
         if(D > 0){
             // _draw_row_to_sprite(col, row_width, x-row_width, y);
-            // _draw_row_to_screen(y);
 
             if(neg_y) y -= 1;
             else y += 1;
@@ -56,7 +54,6 @@ void draw_pixel_line_h(u8 x0, u8 y0, u8 x1, u8 y1, u8 col){
         }
         D += dy*2;
     }
-    _draw_row_to_screen(y);
 }
 void draw_pixel_line_v(u8 x0, u8 y0, u8 x1, u8 y1, u8 col){
     u8 dx;
@@ -91,7 +88,6 @@ void draw_pixel_line_v(u8 x0, u8 y0, u8 x1, u8 y1, u8 col){
     for(y=y0; y<=y1; y++){
         add_history_node_position(x,y,col);
         _draw_row_to_sprite(col, 1, x, y);
-        _draw_row_to_screen(y);
 
         if(D > 0){
             if(neg_y) x -= 1;
@@ -165,19 +161,6 @@ void draw_brush_line_h(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 bru
         }
         D += dy*2;
     }
-
-    if(neg_y){
-        //  _draw_render_queue_to_sprite(col, y0+(brush_size>>1), y1-(brush_size>>1));
-        for(i=0; i<(dy+brush_size+2); i++){
-            _draw_row_to_screen(y1-(brush_size>>1)+i-1);
-        }
-    }
-    else{
-        // _draw_render_queue_to_sprite(col, y1+(brush_size>>1), y0-(brush_size>>1));
-        for(i=0; i<(dy+brush_size+2); i++){
-            _draw_row_to_screen(y0-(brush_size>>1)+i-1);
-        }
-    }
 }
 
 void draw_brush_line_v(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 brush_type){
@@ -224,12 +207,6 @@ void draw_brush_line_v(u8 x0, u8 y0, u8 x1, u8 y1, u8 col, u8 brush_size, u8 bru
             D -= dy*2;
         }
         D += dx*2;
-    }
-
-    // _draw_render_queue_to_sprite(col, y1+(brush_size>>1), y0-(brush_size>>1));
-
-    for(i=0; i<brush_size+dy+2; i++){
-        _draw_row_to_screen(y0-(brush_size>>1)+i-1);
     }
 }
 
@@ -377,7 +354,6 @@ void flood_fill(u8 pix_x, u8 pix_y, u8 mouse_buttons){
                     _draw_row_to_sprite(fill_colour, 1, i, j);
                 }
             }
-            _draw_row_to_screen(j);
         } 
     }
     else{
@@ -396,8 +372,6 @@ void flood_fill(u8 pix_x, u8 pix_y, u8 mouse_buttons){
                 break;
             }
         }
-
-        _draw_canvas_to_screen();
     }
     add_new_history_node();
 }

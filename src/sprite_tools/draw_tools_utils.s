@@ -26,8 +26,6 @@
 	.import		_bmx_no_pals
 	.import		__canvas_pow_scale
 	.import		__square_root
-	.import		__draw_canvas_to_screen
-	.import		__draw_row_to_screen
 	.import		__draw_row_to_sprite
 	.import		__get_pixel
 	.import		__add_history_node_position
@@ -1433,9 +1431,6 @@ L0011:	clc
 	ldy     #$05
 	lda     (sp),y
 	jsr     __draw_row_to_sprite
-	ldy     #$02
-	lda     (sp),y
-	jsr     __draw_row_to_screen
 	ldy     #$05
 	jsr     ldaxysp
 	cmp     #$01
@@ -1480,10 +1475,7 @@ L000E:	ldy     #$04
 	tya
 	adc     (sp),y
 	jmp     L0010
-L0005:	ldy     #$02
-	lda     (sp),y
-	jsr     __draw_row_to_screen
-	ldy     #$0D
+L0005:	ldy     #$0D
 	jmp     addysp
 
 .endproc
@@ -1590,7 +1582,7 @@ L0010:	sta     (sp),y
 	ldy     #$08
 	cmp     (sp),y
 	beq     L0011
-	jcs     L0005
+	bcs     L0005
 L0011:	lda     (sp)
 	jsr     pusha
 	ldy     #$02
@@ -1610,9 +1602,6 @@ L0011:	lda     (sp)
 	ldy     #$04
 	lda     (sp),y
 	jsr     __draw_row_to_sprite
-	ldy     #$01
-	lda     (sp),y
-	jsr     __draw_row_to_screen
 	ldy     #$04
 	jsr     ldaxysp
 	cmp     #$01
@@ -1677,8 +1666,8 @@ L0005:	ldy     #$0C
 	lda     (sp),y
 	ldy     #$0C
 	cmp     (sp),y
-	bcc     L0024
-	beq     L0024
+	bcc     L0014
+	beq     L0014
 	ldy     #$0E
 	lda     (sp),y
 	jsr     pusha
@@ -1700,7 +1689,7 @@ L0005:	ldy     #$0C
 	ldy     #$0C
 	sta     (sp),y
 	jsr     incsp1
-L0024:	lda     (sp),y
+L0014:	lda     (sp),y
 	sec
 	ldy     #$0E
 	sbc     (sp),y
@@ -1733,9 +1722,9 @@ L0003:	ldy     #$06
 	ldx     #$00
 	lda     (sp),y
 	asl     a
-	bcc     L0017
+	bcc     L000D
 	inx
-L0017:	sec
+L000D:	sec
 	iny
 	sbc     (sp),y
 	pha
@@ -1756,12 +1745,12 @@ L0017:	sec
 	ldy     #$0E
 	lda     (sp),y
 	ldy     #$01
-L001F:	sta     (sp),y
+L0011:	sta     (sp),y
 	ldy     #$0C
 	cmp     (sp),y
-	beq     L0022
+	beq     L0012
 	bcs     L0006
-L0022:	ldy     #$01
+L0012:	ldy     #$01
 	lda     (sp),y
 	jsr     pusha
 	ldy     #$03
@@ -1793,100 +1782,34 @@ L000A:	bpl     L0009
 	lda     (sp),y
 	sec
 	sbc     #$01
-	bra     L001E
+	bra     L0010
 L000B:	dey
 	clc
 	ina
 	adc     (sp),y
-L001E:	sta     (sp),y
+L0010:	sta     (sp),y
 	ldy     #$07
 	ldx     #$00
 	lda     (sp),y
 	asl     a
-	bcc     L0018
+	bcc     L000E
 	inx
-L0018:	ldy     #$04
+L000E:	ldy     #$04
 	jsr     subeqysp
 L0009:	ldy     #$06
 	ldx     #$00
 	lda     (sp),y
 	asl     a
-	bcc     L0019
+	bcc     L000F
 	inx
-L0019:	ldy     #$04
+L000F:	ldy     #$04
 	jsr     addeqysp
 	ldy     #$01
 	clc
 	tya
 	adc     (sp),y
-	bra     L001F
-L0006:	ldy     #$03
-	lda     (sp),y
-	beq     L0021
-	lda     #$00
-L0020:	sta     (sp)
-	lda     (sp)
-	jsr     pusha0
-	ldy     #$0B
-	lda     (sp),y
-	clc
-	ldy     #$08
-	adc     (sp),y
-	bcc     L001A
-	inx
-L001A:	jsr     incax2
-	jsr     tosicmp
-	bpl     L0014
-	ldy     #$0B
-	lda     (sp),y
-	jsr     pusha0
-	ldy     #$0B
-	lda     (sp),y
-	lsr     a
-	jsr     tossuba0
-	sta     ptr1
-	lda     (sp)
-	clc
-	adc     ptr1
-	sec
-	sbc     #$01
-	jsr     __draw_row_to_screen
-	clc
-	lda     #$01
-	adc     (sp)
-	bra     L0020
-L0021:	sta     (sp)
-	lda     (sp)
-	jsr     pusha0
-	ldy     #$0B
-	lda     (sp),y
-	clc
-	ldy     #$08
-	adc     (sp),y
-	bcc     L001C
-	inx
-L001C:	jsr     incax2
-	jsr     tosicmp
-	bpl     L0014
-	ldy     #$0D
-	lda     (sp),y
-	jsr     pusha0
-	ldy     #$0B
-	lda     (sp),y
-	lsr     a
-	jsr     tossuba0
-	sta     ptr1
-	lda     (sp)
-	clc
-	adc     ptr1
-	sec
-	sbc     #$01
-	jsr     __draw_row_to_screen
-	clc
-	lda     #$01
-	adc     (sp)
-	bra     L0021
-L0014:	ldy     #$0F
+	bra     L0011
+L0006:	ldy     #$0F
 	jmp     addysp
 
 .endproc
@@ -1967,9 +1890,9 @@ L0003:	ldy     #$07
 	ldx     #$00
 	lda     (sp),y
 	asl     a
-	bcc     L0010
+	bcc     L000C
 	inx
-L0010:	sec
+L000C:	sec
 	dey
 	sbc     (sp),y
 	pha
@@ -1990,12 +1913,12 @@ L0010:	sec
 	ldy     #$0D
 	lda     (sp),y
 	ldy     #$02
-L0016:	sta     (sp),y
+L0010:	sta     (sp),y
 	ldy     #$0B
 	cmp     (sp),y
-	beq     L0018
-	bcs     L0019
-L0018:	ldy     #$01
+	beq     L0011
+	bcs     L0005
+L0011:	ldy     #$01
 	lda     (sp),y
 	jsr     pusha
 	ldy     #$03
@@ -2027,66 +1950,34 @@ L0009:	bpl     L0008
 	lda     (sp),y
 	sec
 	sbc     #$01
-	bra     L0015
+	bra     L000F
 L000A:	ldy     #$01
 	clc
 	tya
 	adc     (sp),y
-L0015:	sta     (sp),y
+L000F:	sta     (sp),y
 	ldy     #$06
 	ldx     #$00
 	lda     (sp),y
 	asl     a
-	bcc     L0011
+	bcc     L000D
 	inx
-L0011:	ldy     #$04
+L000D:	ldy     #$04
 	jsr     subeqysp
 L0008:	ldy     #$07
 	ldx     #$00
 	lda     (sp),y
 	asl     a
-	bcc     L0012
+	bcc     L000E
 	inx
-L0012:	ldy     #$04
+L000E:	ldy     #$04
 	jsr     addeqysp
 	ldy     #$02
 	clc
 	lda     #$01
 	adc     (sp),y
-	jmp     L0016
-L0019:	lda     #$00
-L0017:	sta     (sp)
-	lda     (sp)
-	jsr     pusha0
-	ldy     #$08
-	lda     (sp),y
-	clc
-	ldy     #$0B
-	adc     (sp),y
-	bcc     L0013
-	inx
-L0013:	jsr     incax2
-	jsr     tosicmp
-	bpl     L000D
-	ldy     #$0D
-	lda     (sp),y
-	jsr     pusha0
-	ldy     #$0B
-	lda     (sp),y
-	lsr     a
-	jsr     tossuba0
-	sta     ptr1
-	lda     (sp)
-	clc
-	adc     ptr1
-	sec
-	sbc     #$01
-	jsr     __draw_row_to_screen
-	clc
-	lda     #$01
-	adc     (sp)
-	bra     L0017
-L000D:	ldy     #$0F
+	jmp     L0010
+L0005:	ldy     #$0F
 	jmp     addysp
 
 .endproc
@@ -2383,7 +2274,7 @@ L0019:	sta     (sp),y
 	ldx     _bmx_width+1
 	jsr     ldaxi
 	jsr     tosicmp
-	bcs     L000B
+	bcs     L0008
 	ldy     #$01
 	lda     (sp),y
 	jsr     pusha
@@ -2416,14 +2307,12 @@ L000E:	jsr     incsp1
 	tya
 	adc     (sp),y
 	bra     L0019
-L000B:	lda     (sp)
-	jsr     __draw_row_to_screen
-	clc
+L0008:	clc
 	lda     #$01
 	adc     (sp)
-	jmp     L001A
+	bra     L001A
 L0007:	jsr     incsp2
-	bra     L000F
+	bra     L0015
 L001D:	stz     _queue_length
 	lda     #<(_flood_fill_queue_x)
 	ldx     #>(_flood_fill_queue_x)
@@ -2457,8 +2346,7 @@ L001E:	dec     _queue_length
 	bra     L0015
 L001F:	lda     _queue_length
 	bne     L001E
-L0015:	jsr     __draw_canvas_to_screen
-L000F:	jsr     _add_new_history_node
+L0015:	jsr     _add_new_history_node
 L0001:	jmp     incsp3
 
 .endproc

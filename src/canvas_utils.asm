@@ -4,10 +4,8 @@
 .export __initialize_bmx_data
 .export __transfer_sprite_to_vram
 .export __init_canvas_vera_tiles
-.export __draw_canvas_to_screen
 .export __render_palette_sprites
 .export __render_colour_sprite
-.export __draw_row_to_screen 
 .export __transfer_pal_to_vera
 .export __image_data_size
 .export __draw_row_to_sprite
@@ -112,133 +110,102 @@ __initialize_bmx_data:
 PIX_ADDR = ZP_PTR_1
 ; u8 _get_pixel(u8 x, u8 y)
 __get_pixel:
-    stz PIX_ADDR+1
-    sta PIX_ADDR
-    ldy __x_axis
-
-    @multiply_height:
-        asl PIX_ADDR
-        rol PIX_ADDR+1
-    dey
-    bne @multiply_height
-
-    lda PIX_ADDR
-    clc
-    adc (sp)
-    sta PIX_ADDR
-    lda PIX_ADDR+1
-    adc #0
-    sta PIX_ADDR+1
-    inc sp
-
-    stz VERA_ctrl
-    lda PIX_ADDR
-    clc
-    adc #(<SPRITE_VRAM_DATA_ADDR)
-    sta VERA_addr_low
-    lda PIX_ADDR+1
-    adc #(>SPRITE_VRAM_DATA_ADDR)
-    sta VERA_addr_high
-    lda #(%00010000)
-    sta VERA_addr_bank
-
-
-    lda VERA_data0
+    
     rts
 
 ;void _draw_row_to_sprite(u8 pal_col, u8 width, u8 x, u8 y);
 ; TODO: clamp to the edges of the canvas at the right and left
+D_POS_X = ZP_PTR_1
+D_POS_Y = ZP_PTR_2
+D_WIDTH = ZP_PTR_3
+D_COL = ZP_PTR_4
+D_SPR_ADDR = ZP_PTR_5
 __draw_row_to_sprite:
-    stz PIX_ADDR+1
-    sta PIX_ADDR
-    ldy __x_axis
-
-    @multiply_height:
-        asl PIX_ADDR
-        rol PIX_ADDR+1
-    dey
-    bne @multiply_height
-
-    lda PIX_ADDR
-    clc
-    adc (sp)
-    sta PIX_ADDR
-    lda PIX_ADDR+1
-    adc #0
-    sta PIX_ADDR+1
-    inc sp
-
-    stz VERA_ctrl
-    lda PIX_ADDR
-    clc
-    adc #(<SPRITE_VRAM_DATA_ADDR)
-    sta VERA_addr_low
-    lda PIX_ADDR+1
-    adc #(>SPRITE_VRAM_DATA_ADDR)
-    sta VERA_addr_high
+    pha
+    stz D_SPR_ADDR
+    stz D_SPR_ADDR+1
     lda #(%00010000)
-    sta VERA_addr_bank
+    sta D_SPR_ADDR+2
 
+    pla
+    sta D_POS_Y
     lda (sp)
     inc sp
-    tax
+    sta D_POS_X
+    and #(%11110000)
+    sta D_SPR_ADDR+1
     lda (sp)
     inc sp
-    @row_loop:
-        sta VERA_data0
-    dex
-    bne @row_loop
+    sta D_WIDTH
+    lda (sp)
+    inc sp
+    sta D_COL
+
+    lda D_POS_Y
+    .repeat 4
+        lsr 
+    .endrepeat
+    clc
+    adc D_SPR_ADDR+1
+    sta D_SPR_ADDR+1
+
+    lda D_SPR_ADDR+2
+    adc #0
+    sta D_SPR_ADDR+2
+
+
+    .repeat 4
+        asl D_POS_Y
+    .endrepeat
+
+    lda D_POS_X
+    and #(%00001111)
+    sta D_POS_X
+    ora D_POS_Y
+    
+    stz VERA_ctrl
+    sta VERA_addr_low
+    lda D_SPR_ADDR+1
+    sta VERA_addr_high
+    lda D_SPR_ADDR+2
+    sta VERA_addr_bank
+    
+    @tile_loop:
+        lda #16
+        sec
+        sbc D_POS_X
+        tax
+
+        stz D_POS_X
+
+        lda D_COL
+        @row_loop:
+            sta VERA_data0
+            dec D_WIDTH
+            beq @end_tile_loop
+
+        dex
+        bne @row_loop
+
+        stz VERA_ctrl
+        lda D_POS_Y
+        sta VERA_addr_low
+        lda D_SPR_ADDR+1
+        clc
+        adc #16
+        sta VERA_addr_high
+        sta D_SPR_ADDR+1
+        lda D_SPR_ADDR+2
+        adc #0
+        sta VERA_addr_bank
+        sta D_SPR_ADDR+2
+
+    jmp @tile_loop
+    @end_tile_loop:
 
     rts
 
 __draw_column_to_sprite:
-    stz PIX_ADDR+1
-    sta PIX_ADDR
-    ldy __x_axis
-
-    @multiply_height:
-        asl PIX_ADDR
-        rol PIX_ADDR+1
-    dey
-    bne @multiply_height
-
-    lda PIX_ADDR
-    clc
-    adc (sp)
-    sta PIX_ADDR
-    lda PIX_ADDR+1
-    adc #0
-    sta PIX_ADDR+1
-    inc sp
-
-    stz VERA_ctrl
-    lda PIX_ADDR
-    clc
-    adc #(<SPRITE_VRAM_DATA_ADDR)
-    sta VERA_addr_low
-    lda PIX_ADDR+1
-    adc #(>SPRITE_VRAM_DATA_ADDR)
-    sta VERA_addr_high
-    lda __x_axis
-    .repeat 4
-        asl
-    .endrepeat
-    clc
-    adc #(%00010000)
-    sta VERA_addr_bank
-    
-
-    lda (sp)
-    inc sp
-    tax
-    lda (sp)
-    inc sp
-    @row_loop:
-        sta VERA_data0
-    dex
-    bne @row_loop
-
-    
     rts
 
 BITMAP_ADDR = ZP_PTR_1
@@ -480,6 +447,7 @@ __init_canvas_vera_tiles:
 PAL_PAGE2_OFFSET = RAM_WIN + 256
 PAL_NO = ZP_PTR_1
 PAL_READ_ADDR = ZP_PTR_2
+ROW_START = ZP_PTR_3
 __transfer_pal_to_vera:
     ; set data port to the start of vera palette
     stz VERA_ctrl
@@ -512,32 +480,7 @@ __transfer_pal_to_vera:
 
     rts
 
-PIX_COL = ZP_PTR_1
-ROW_START = ZP_PTR_2
-__clear_canvas_screen:
-    stz VERA_ctrl
-    lda #(<DISPLAY_VRAM_ADDR)
-    sta VERA_addr_low
-    lda #(>DISPLAY_VRAM_ADDR)
-    sta VERA_addr_high
-    lda #(%00010000)
-    sta VERA_addr_bank
 
-    lda #00
-    ldx __display_width
-    @row_loop:
-        ldy __display_height
-        @pix_loop:
-            sta VERA_data0
-        dey
-        bne @pix_loop
-    dex
-    bne @row_loop
-
-    rts
-
-
-__draw_canvas_to_screen:
     ; jsr __clear_canvas_screen
 
     lda #(<SPRITE_VRAM_DATA_ADDR)
@@ -794,140 +737,6 @@ __render_colour_sprite:
 
 ROW_DISPLAY_ADDR = ZP_PTR_1
 ROW_SPRITE_ADDR = ZP_PTR_2
-__draw_row_to_screen:
-    cmp _bmx_height
-    bmi @skip_early_exit
-    rts
-    @skip_early_exit:
-
-    stz ROW_SPRITE_ADDR+1
-    sta ROW_SPRITE_ADDR
-    
-    stz ROW_DISPLAY_ADDR+1
-    sta ROW_DISPLAY_ADDR
-
-    ldx __display_row_pow
-    @row_asl:
-        asl ROW_DISPLAY_ADDR
-        rol ROW_DISPLAY_ADDR+1
-    dex
-    bne @row_asl
-
-    stz VERA_ctrl
-    lda #(<DISPLAY_VRAM_ADDR)
-    clc
-    adc ROW_DISPLAY_ADDR
-    sta ROW_DISPLAY_ADDR
-    sta VERA_addr_low
-    lda ROW_DISPLAY_ADDR+1
-    adc #(>DISPLAY_VRAM_ADDR)
-    sta ROW_DISPLAY_ADDR+1
-    sta VERA_addr_high
-    lda #(%00010000)
-    sta VERA_addr_bank
-
-    ldy __x_axis
-    @multiply_height:
-        asl ROW_SPRITE_ADDR
-        rol ROW_SPRITE_ADDR+1
-    dey
-    bne @multiply_height
-
-    lda #(<SPRITE_VRAM_DATA_ADDR)
-    clc
-    adc ROW_SPRITE_ADDR
-    sta ROW_SPRITE_ADDR
-    lda #(>SPRITE_VRAM_DATA_ADDR)
-    adc ROW_SPRITE_ADDR+1
-    sta ROW_SPRITE_ADDR+1
-
-    ldx __canvas_scale
-    @column_loop:
-        lda #1
-        sta VERA_ctrl
-        lda ROW_SPRITE_ADDR
-        sta VERA_addr_low
-        lda ROW_SPRITE_ADDR+1
-        sta VERA_addr_high
-        lda #(%00010000)
-        sta VERA_addr_bank
-
-        phx
-        ldx __canvas_paint_width
-        @row_loop:
-            lda VERA_data1
-            ldy __canvas_scale
-            @row_scale_loop:
-                sta VERA_data0
-            dey
-            bne @row_scale_loop
-        dex
-        bne @row_loop
-
-    plx
-    dex
-    bne @column_loop
-
-
-    lda __canvas_paint_offset
-    beq @end_draw_loop
-
-
-    lda ROW_SPRITE_ADDR
-    clc
-    adc __canvas_paint_width
-    sta ROW_SPRITE_ADDR
-    lda ROW_SPRITE_ADDR+1
-    adc #0
-    sta ROW_SPRITE_ADDR+1
-
-    stz VERA_ctrl
-    lda ROW_DISPLAY_ADDR
-    sta VERA_addr_low
-    lda __sprite_size+1
-    
-    ldx __display_has_columns
-    cpx #0
-    beq @skip_asl
-
-    asl
-    @skip_asl:
-    clc
-    adc ROW_DISPLAY_ADDR+1
-    sta VERA_addr_high
-    lda #(%00010000)
-    sta VERA_addr_bank
-
-    ldx __canvas_scale
-    @column_loop2:
-        lda #1
-        sta VERA_ctrl
-        lda ROW_SPRITE_ADDR
-        sta VERA_addr_low
-        lda ROW_SPRITE_ADDR+1
-        sta VERA_addr_high
-        lda #(%00010000)
-        sta VERA_addr_bank
-
-        phx
-        ldx __canvas_paint_width
-        @row_loop2:
-            lda VERA_data1
-            ldy __canvas_scale
-            @row_scale_loop2:
-                sta VERA_data0
-            dey
-            bne @row_scale_loop2
-        dex
-        bne @row_loop2
-
-    plx
-    dex
-    bne @column_loop2
-
-    @end_draw_loop:
-
-    rts
 
 .macro inc_stack
     lda __history_stack_addr

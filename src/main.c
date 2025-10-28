@@ -98,6 +98,8 @@ int main(){
 
     _current_tool = 0;
 
+    _draw_row_to_sprite(0, 32, 8, 8);
+
     while(1){
         _wait_for_nmi();
         canvas_zoom_handler();
