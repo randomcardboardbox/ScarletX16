@@ -111,7 +111,7 @@ void init_canvas_vera_sprites(){
     }
 }
 
-u8 zoom = 2;
+u8 zoom = 4;
 u16 x_pan = 0;
 u16 y_pan = 0;
 void canvas_zoom_handler(){

@@ -13,8 +13,8 @@ all: $(ALL_OBJS)
 	ca65 -t cx16 -o $@ $<
 
 run:
-	make
-	cd export;x16emu -run -prg SCARLET.PRG -quality nearest -scale 2 -debug
+ 	make
+	cd export; x16emu -run -prg SCARLET.PRG -quality nearest -scale 2 -debug
 
 debug:
 	make

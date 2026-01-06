@@ -78,7 +78,7 @@ int main(){
     _init_irq_handler();
     _init_screen_mode();
     set_layer_config();
-    // _initialize_mouse();
+    _initialize_mouse();
     // initialize_paint_ui();
     
     _init_canvas_vera_tiles();
@@ -94,11 +94,12 @@ int main(){
     // _draw_bitmap_canvas_to_screen();
     // set_pal_icon_sprites();
 
-    HIS_STACK_ADDR = (u32)0x0004A000;
+    // HIS_STACK_ADDR = (u32)0x0004A000;
 
     _current_tool = 0;
 
     _draw_row_to_sprite(0, 32, 8, 8);
+    _draw_row_to_sprite(0, 32, 16, 16);
 
     while(1){
         _wait_for_nmi();
@@ -109,11 +110,13 @@ int main(){
         // parse_mouse_input();
         get_keycode();
         // handle_keyboard_input();
-        // tool_handler();
+        tool_handler();
         // tool_ui_handler();
 
         // update_ui_elements_from_ptr();
     }
+
+    return(1);
 }
 
 // #include <stdio.h>

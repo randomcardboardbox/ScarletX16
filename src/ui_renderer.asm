@@ -89,10 +89,9 @@ __ui_next_sib: .res __MAX_UI_ELEMENTS, $00
 __ui_prev_sib: .res __MAX_UI_ELEMENTS, $00
 
 __initialize_mouse:
-    lda #1
-    ldx #(320/8)
-    ldy #(240/8)
-    sec
+    lda #0
+    ldx #(640/8)
+    ldy #(480/8)
     jsr MOUSE_CONFIG
     rts
 
@@ -100,6 +99,25 @@ __get_mouse_input:
     ldx #ZP_MOUSE
     jsr MOUSE_GET
     sta ZP_MOUSE+4
+
+    ; set mouse position
+        stz VERA_ctrl
+        lda #<(VRAM_sprattr+2)
+        sta VERA_addr_low
+        lda #>(VRAM_sprattr+2)
+        sta VERA_addr_high
+        lda #%00010001
+        sta VERA_addr_bank
+
+        lda ZP_MOUSE+0
+        sta VERA_data0
+        lda ZP_MOUSE+1
+        sta VERA_data0
+        lda ZP_MOUSE+2
+        sta VERA_data0
+        lda ZP_MOUSE+3
+        sta VERA_data0
+    
     rts
 
 LAYER_WIDTH = 64
